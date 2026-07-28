@@ -1,176 +1,216 @@
-# API Endpoints
+# InClient Backend API Endpoints Specification
 
 Base URL: `/api/v1`
 
-This file is a quick reference for the frontend. It lists the endpoints that are currently mounted in the server code and the main access rules that affect frontend integration.
+All requests must supply credentials when marked as **Protected** (via cookies or `Authorization: Bearer <token>` header).
 
-## Health Check
+---
 
-- `GET /healthcheck`
+## 1. System Health Check
+* **`GET /healthcheck`**
+  * Access: Public
 
-## Auth
+---
 
-- `POST /auth/signup`
-  - Public
-  - Accepts avatar upload via `multipart/form-data` field: `avatar`
-- `POST /auth/login`
-  - Public
-- `POST /auth/logout`
-  - Protected
-- `POST /auth/change-password`
-  - Protected
-- `POST /auth/forgot-password`
-  - Public
-- `POST /auth/reset-password/:token`
-  - Public
-- `GET /auth/verify-email/:token`
-  - Public
-- `POST /auth/resend-email`
-  - Public
-- `GET /auth/me`
-  - Protected
-- `POST /auth/refresh-token`
-  - Public
-- `DELETE /auth/delete`
-  - Protected
+## 2. Authentication & Profile Management (`/auth`)
+Endpoints handling sessions, activations, and account settings.
 
-## Organizations
+* **`POST /auth/signup`**
+  * Access: Public
+  * Content-Type: `multipart/form-data`
+  * Description: Register user account. Supports uploading profile avatar via file field `avatar`.
+* **`POST /auth/login`**
+  * Access: Public
+  * Description: Login user. Responds with access token, refresh token, and cookie configurations.
+* **`POST /auth/logout`**
+  * Access: Protected
+  * Description: Invalidate active user tokens and clear browser cookies.
+* **`GET /auth/me`**
+  * Access: Protected
+  * Description: Return currently authenticated user profile.
+* **`DELETE /auth/delete`**
+  * Access: Protected
+  * Description: Soft delete the user profile (`isDeleted: true`).
+* **`POST /auth/change-password`**
+  * Access: Protected
+  * Description: Replace old password with a new password.
+* **`POST /auth/forgot-password`**
+  * Access: Public
+  * Description: Generate and email a password reset link.
+* **`POST /auth/reset-password/:token`**
+  * Access: Public
+  * Description: Verify reset token and apply new password.
+* **`GET /auth/verify-email/:token`**
+  * Access: Public
+  * Description: Verify email verification token and activate user.
+* **`POST /auth/resend-email`**
+  * Access: Public
+  * Description: Resend verification email to user.
+* **`POST /auth/refresh-token`**
+  * Access: Public
+  * Description: Exchange a valid refresh token for a new short-lived access token.
 
-- `POST /organizations`
-  - Protected
-  - Accepts logo upload via `multipart/form-data` field: `logo`
-- `GET /organizations/:organizationId`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
-- `PATCH /organizations/:organizationId`
-  - Protected
-  - Roles: `owner`
-- `DELETE /organizations/:organizationId`
-  - Protected
-  - Roles: `owner`
+---
 
-### Members
+## 3. Organization Administration (`/organizations`)
+Top-level routes for organizations management.
 
-- `GET /organizations/:organizationId/members`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
-- `PATCH /organizations/:organizationId/members/:userId`
-  - Protected
-  - Roles: `owner`
-- `DELETE /organizations/:organizationId/members/:userId`
-  - Protected
-  - Roles: `owner`
+* **`POST /organizations`**
+  * Access: Protected
+  * Content-Type: `multipart/form-data`
+  * Description: Register a new organization. Supports logo upload via file field `logo`.
+* **`GET /organizations`**
+  * Access: Protected
+  * Description: Fetch all organizations the logged-in user belongs to.
+* **`GET /organizations/:organizationId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+  * Description: Retrieve details for a specific organization.
+* **`PATCH /organizations/:organizationId`**
+  * Access: Protected
+  * RBAC: `owner`
+  * Description: Update organization properties (Name, logo, currency, address, etc.).
+* **`DELETE /organizations/:organizationId`**
+  * Access: Protected
+  * RBAC: `owner`
+  * Description: Remove organization profile and clear data.
 
-### Organization Invitations
+---
 
-- `POST /organizations/:organizationId/invitations`
-  - Protected
-  - Roles: `owner`, `admin`
-- `GET /organizations/:organizationId/invitations`
-  - Protected
-  - Roles: `owner`, `admin`
+## 4. Nested Organization Services
+These routes are nested under the organization context `/organizations/:organizationId` to enforce tenant boundaries.
 
-### Clients
+### 4.1 Client Management (`/organizations/:organizationId/clients`)
+* **`POST /`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`GET /`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`GET /:clientId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`PATCH /:clientId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`DELETE /:clientId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`
+* **`GET /:clientId/invoices`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+  * Description: Fetch invoices issued specifically for this client.
+* **`GET /:clientId/stats`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+  * Description: Fetch client stats (Total revenue, invoices, paid and outstanding balances).
 
-- `POST /organizations/:organizationId/clients`
-  - Protected
-- `GET /organizations/:organizationId/clients`
-  - Protected
-- `GET /organizations/:organizationId/clients/:clientId`
-  - Protected
-- `PATCH /organizations/:organizationId/clients/:clientId`
-  - Protected
-- `DELETE /organizations/:organizationId/clients/:clientId`
-  - Protected
-  - Roles: `owner`, `admin`
-- `DELETE /organizations/:organizationId/clients/:clientId/invoices`
-  - Protected
-- `DELETE /organizations/:organizationId/clients/:clientId/stats`
-  - Protected
+### 4.2 Invoice Management (`/organizations/:organizationId/invoices`)
+* **`POST /`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`GET /`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`GET /:invoiceId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`PATCH /:invoiceId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`
+* **`DELETE /:invoiceId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`
+* **`PATCH /:invoiceId/status`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`
+* **`GET /:invoiceId/pdf`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+  * Description: Retrieve generated invoice PDF binary (placeholder/WIP).
+* **`POST /:invoiceId/send`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+  * Description: Send invoice billing email to client (placeholder/WIP).
 
-### Invoices
+### 4.3 Payment Tracking (`/organizations/:organizationId`)
+* **`GET /payments`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+  * Description: Retrieve all recorded payments within the organization.
+* **`POST /invoices/:invoiceId/payments`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`
+  * Description: Record a payment transaction against an invoice.
+* **`GET /invoices/:invoiceId/payments`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+  * Description: Fetch payment logs for a specific invoice.
+* **`GET /invoices/:invoiceId/payments/:paymentId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+  * Description: Fetch details of a recorded payment.
+* **`DELETE /invoices/:invoiceId/payments/:paymentId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`
+  * Description: Delete a payment transaction (restores outstanding balance).
 
-- `POST /organizations/:organizationId/invoices`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
-- `GET /organizations/:organizationId/invoices`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
-- `GET /organizations/:organizationId/invoices/:invoiceId`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
-- `PATCH /organizations/:organizationId/invoices/:invoiceId`
-  - Protected
-  - Roles: `owner`, `admin`
-- `DELETE /organizations/:organizationId/invoices/:invoiceId`
-  - Protected
-  - Roles: `owner`, `admin`
-- `PATCH /organizations/:organizationId/invoices/:invoiceId/status`
-  - Protected
-  - Roles: `owner`, `admin`
-- `GET /organizations/:organizationId/invoices/:invoiceId/pdf`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
-- `POST /organizations/:organizationId/invoices/:invoiceId/send`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
+### 4.4 Service Catalog (`/organizations/:organizationId/services`)
+* **`POST /`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`
+* **`GET /`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`GET /:serviceId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`PATCH /:serviceId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`
+* **`DELETE /:serviceId`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`
 
-### Payments
+### 4.5 Team Collaboration & Onboarding (`/organizations/:organizationId`)
+* **`GET /members`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`PATCH /members/:userId`**
+  * Access: Protected
+  * RBAC: `owner`
+* **`DELETE /members/:userId`**
+  * Access: Protected
+  * RBAC: `owner`
+* **`POST /invitations`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`
+* **`GET /invitations`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`
 
-- `GET /organizations/:organizationId/payments`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
-- `POST /organizations/:organizationId/invoices/:invoiceId/payments`
-  - Protected
-  - Roles: `owner`, `admin`
-- `GET /organizations/:organizationId/invoices/:invoiceId/payments`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
-- `GET /organizations/:organizationId/invoices/:invoiceId/payments/:paymentId`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
-- `DELETE /organizations/:organizationId/invoices/:invoiceId/payments/:paymentId`
-  - Protected
-  - Roles: `owner`, `admin`
+---
 
-### Services
+## 5. Standalone Invitations Onboarding
+* **`POST /invitations/:token/accept`**
+  * Access: Protected
+  * Description: Accept invitation. Adds user to organization memberships.
+* **`POST /invitations/:token/reject`**
+  * Access: Protected
+  * Description: Decline invitation.
 
-- `POST /organizations/:organizationId/services`
-  - Protected
-  - Roles: `owner`, `admin`
-- `GET /organizations/:organizationId/services`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
-- `GET /organizations/:organizationId/services/:serviceId`
-  - Protected
-  - Roles: `owner`, `admin`, `member`
-- `PATCH /organizations/:organizationId/services/:serviceId`
-  - Protected
-  - Roles: `owner`, `admin`
-- `DELETE /organizations/:organizationId/services/:serviceId`
-  - Protected
-  - Roles: `owner`, `admin`
+---
 
-## Invitations
-
-- `POST /invitations/:token/accept`
-  - Protected
-- `POST /invitations/:token/reject`
-  - Protected
-
-## Dashboard
-
-- `GET /dashboard/:organizationId/overview`
-  - Protected
-- `GET /dashboard/:organizationId/monthly-revenue`
-  - Protected
-- `GET /dashboard/:organizationId/recent-invoices`
-  - Protected
-- `GET /dashboard/:organizationId/top-clients`
-  - Protected
-
-## Notes
-
-- All protected endpoints rely on JWT authentication through `verifyJWT`.
-- Some endpoints also require role checks via `authorizeRoles`.
-- Request/response payload shapes live in the controllers and are not repeated here.
+## 6. Organization Metrics Dashboard (`/dashboard/:organizationId`)
+* **`GET /dashboard/:organizationId/overview`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`GET /dashboard/:organizationId/monthly-revenue`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`GET /dashboard/:organizationId/recent-invoices`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`
+* **`GET /dashboard/:organizationId/top-clients`**
+  * Access: Protected
+  * RBAC: `owner`, `admin`, `member`

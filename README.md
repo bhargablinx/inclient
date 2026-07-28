@@ -1,252 +1,244 @@
-# Invoice & Client Management Platform
+# InClient — Tenant-Aware Invoice & Client Management Platform
 
-> [Demo Video](https://youtu.be/L6rMdd1CJ3Q) |
-> [Live Preview](https://inclient.netlify.app)
+<p align="center">
+  <a href="https://github.com/bhargablinx/invoice-client-management/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/bhargablinx/invoice-client-management?color=blue&style=flat-square" alt="License">
+  </a>
+  <img src="https://img.shields.io/badge/node-%3E%3D%2018.0.0-green?style=flat-square" alt="Node Version">
+  <img src="https://img.shields.io/badge/React-19.0.0-61dafb?style=flat-square&logo=react" alt="React 19">
+  <img src="https://img.shields.io/badge/Express-5.2.1-lightgrey?style=flat-square" alt="Express 5">
+  <img src="https://img.shields.io/badge/Redux-Toolkit-764abc?style=flat-square&logo=redux" alt="Redux Toolkit">
+  <img src="https://img.shields.io/badge/Tailwind-CSS%20v4-38bdf8?style=flat-square&logo=tailwindcss" alt="Tailwind CSS">
+</p>
 
-> Try Demo account: email: one@example.com | password: 12345678
+---
 
-A full-stack invoice and client management application built for freelancers, consultants, and small agencies. The platform centralizes organizations, clients, invoices, payments, memberships, and invitation workflows in a single dashboard experience.
+**InClient** is a full-featured, self-hostable, multi-tenant billing engine and client directory platform built for freelancers, consultants, and agencies. It groups clients, service catalogs, invoices, payments, and team memberships in a fast, modern, and tenant-isolated dashboard experience.
 
-## Overview
+> 📺 **[Watch Demo Video](https://youtu.be/L6rMdd1CJ3Q)** &nbsp;|&nbsp; 🌐 **[Live Application Preview](https://inclient.netlify.app)**
+>
+> 🔑 **Demo Sandbox Account**:
+> * **Email**: `one@example.com`
+> * **Password**: `12345678`
 
-### Preview
+---
 
-<table>
+## 📸 Product Preview
+
+<table border="0">
   <tr>
-    <td>
-      <img src="./preview/landing.png" alt="Search UI" width="100%"/>
+    <td width="50%">
+      <p align="center"><b>Modern Marketing Landing Page</b></p>
+      <img src="./preview/landing.png" alt="Landing Page" style="border-radius: 8px; border: 1px solid #ddd;"/>
     </td>
-    <td>
-      <img src="./preview/dashboard.png" alt="Home" width="100%"/>
+    <td width="50%">
+      <p align="center"><b>Analytics Metrics Dashboard</b></p>
+      <img src="./preview/dashboard.png" alt="Metrics Dashboard" style="border-radius: 8px; border: 1px solid #ddd;"/>
     </td>
   </tr>
   <tr>
-    <td>
-      <img src="./preview/invoice.png" alt="Editor Preview" width="100%"/>
+    <td width="50%">
+      <p align="center"><b>Dynamic Invoice Editor</b></p>
+      <img src="./preview/invoice.png" alt="Invoice Builder" style="border-radius: 8px; border: 1px solid #ddd;"/>
     </td>
-    <td>
-      <img src="./preview/payment.png" alt="Dark Mode" width="100%"/>
+    <td width="50%">
+      <p align="center"><b>Payments Ledger & History</b></p>
+      <img src="./preview/payment.png" alt="Payments Ledger" style="border-radius: 8px; border: 1px solid #ddd;"/>
     </td>
   </tr>
 </table>
 
-This repository contains two applications:
+---
 
-- `client/` - a React + Vite frontend
-- `server/` - an Express + MongoDB API
+## ✨ Platform Features
 
-The client consumes the backend through a REST API and uses authenticated, organization-aware workflows for managing day-to-day billing operations.
+* **Multi-Tenancy Isolation**: Strong boundaries ensuring that memberships, configurations, services, and transactions are strictly scoped to the active tenant/organization.
+* **Role-Based Access Control (RBAC)**: Fine-grained permissions for **Owner**, **Admin**, and **Member** roles.
+* **Service Catalog Registry**: Standardizes invoice generation. Users save services with preset pricing and tax criteria, then auto-fill invoice line items.
+* **Dynamic Invoice Calculations**: The system handles line item totals, custom tax rates, discount deductions, subtotals, and outstanding balance tracking.
+* **Real-time Payments Ledger**: Log partial or full invoice payments. Balances are recalculated on the fly, auto-updating invoice statuses to `partially_paid` or `paid`.
+* **Team Invitation Flow**: Owner and Admin users can invite team members via secure, tokenized onboarding emails.
+* **Analytics Engine**: Out-of-the-box charts for monthly revenue growth, invoice state breakdowns, and high-value customer rankings.
+* **Soft Deletion Profiles**: Preserves referential integrity by marking user accounts as inactive (`isDeleted: true`) rather than performing hard deletions.
 
-## Key Features
+---
 
-- Authentication with signup, login, logout, email verification, password reset, and session refresh
-- Organization management with multi-organization support
-- Client management with CRUD flows and status tracking
-- Invoice creation, editing, viewing, and management
-- Payment tracking and payment detail views
-- Team membership and invitation flows
-- Dashboard analytics for revenue, invoices, payments, and top clients
-- Protected routes and role-aware navigation
-- Responsive UI built with React, Redux Toolkit, React Router, Tailwind CSS, and shadcn-style components
+## 🏗 System Architecture
 
-## Tech Stack
+```mermaid
+graph LR
+    subgraph Client Application React
+        A[React Router DOM] --> B[Redux Toolkit Store]
+        B --> C[Axios API Client]
+    end
 
-### Frontend
+    subgraph API Gateways Express
+        C --> D[verifyJWT Middleware]
+        D --> E[authorizeRoles Tenant Guard]
+        E --> F[Resource Routes]
+    end
 
-- React 19
-- Vite
-- React Router DOM
-- Redux Toolkit
-- React Hook Form
-- Axios
-- Tailwind CSS v4
-- lucide-react
+    subgraph Storage & Providers
+        F --> G[(MongoDB Database)]
+        F --> H[Cloudinary Media Bucket]
+        F --> I[Resend Email Dispatch]
+    end
+    
+    style Client Application React fill:#e1f5fe,stroke:#039be5,stroke-width:2px;
+    style API Gateways Express fill:#efebe9,stroke:#5d4037,stroke-width:2px;
+    style Storage & Providers fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+```
 
-### Backend
+---
 
-- Node.js
-- Express 5
-- MongoDB
-- Mongoose
-- JWT authentication
-- bcrypt
-- cookie-parser
-- cors
-- multer
-- Cloudinary uploads
-- Resend email delivery
+## 📂 Repository Layout Map
 
-## Repository Structure
+This repository is set up as a decoupled monorepo:
 
 ```text
 .
-├── client
-│   ├── src
+├── client/                     # Frontend Client App (Vite + React)
+│   ├── src/
+│   │   ├── api/                # API communication layers
+│   │   ├── components/         # Shared components (ui, dashboard, landing)
+│   │   ├── features/           # Redux slices and thunks (auth, invoices, etc.)
+│   │   ├── hooks/              # Custom layout and data React hooks
+│   │   ├── layouts/            # Auth and Protected route wrappers
+│   │   ├── pages/              # Main route views
+│   │   └── store/              # Redux RTK Bootstrap config
 │   ├── package.json
 │   └── vite.config.js
-├── server
-│   ├── src
+│
+├── server/                     # Backend API App (Express 5 + Node.js)
+│   ├── src/
+│   │   ├── controllers/        # Request handlers and business logic
+│   │   ├── db/                 # Database initialization and connection pool
+│   │   ├── middlewares/        # Authentication, RBAC, and error handlers
+│   │   ├── models/             # Mongoose schemas (9 models)
+│   │   ├── routes/             # Modular sub-routers (clients, invoices, etc.)
+│   │   └── utils/              # Responders, errors, and mail templates
 │   ├── package.json
 │   └── index.js
-└── README.md
+│
+└── docs/                       # Global system documentation
 ```
 
-## Prerequisites
+---
 
-- Node.js 18 or newer
-- npm 9 or newer
-- MongoDB instance
-- Cloudinary account
-- Resend API key
+## 🚀 Getting Started
 
-## Local Setup
+### Prerequisites
+* **Node.js**: `v18.x` or newer
+* **MongoDB**: A running local or remote instance
+* **Media bucket**: A Cloudinary developer account for organization logos
+* **Email API**: A Resend API key for invitations and verification
 
-### 1. Clone the repository
+### 1. Clone & Install
 
 ```bash
 git clone https://github.com/bhargablinx/invoice-client-management.git
 cd invoice-client-management
+
+# Install frontend dependencies
+cd client && npm install
+
+# Install backend dependencies
+cd ../server && npm install
 ```
 
-### 2. Install dependencies
+### 2. Configuration Setup
 
-Install the frontend and backend dependencies separately:
+<details>
+<summary><b>Backend Environment Setup (server/.env)</b></summary>
 
-```bash
-cd client
-npm install
-
-cd ../server
-npm install
-```
-
-### 3. Configure environment variables
-
-Create a `.env` file inside `server/` with the following values:
+Create a `.env` file in the `server/` directory and configure the variables:
 
 ```env
 PORT=5000
-MONGODB_URL=mongodb://127.0.0.1:27017
+MONGODB_URL=mongodb://127.0.0.1:27017/inclient
+
 CORS_ORIGIN=http://localhost:5173
 CLIENT_URL=http://localhost:5173
 
-ACCESS_TOKEN_SECRET=your_access_token_secret
+ACCESS_TOKEN_SECRET=your_jwt_access_token_secret_key
 ACCESS_TOKEN_EXPIRY=15m
-REFRESH_TOKEN_SECRET=your_refresh_token_secret
+REFRESH_TOKEN_SECRET=your_jwt_refresh_token_secret_key
 REFRESH_TOKEN_EXPIRY=7d
 
+# Media Uploads (Cloudinary)
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
-RESEND_API_KEY=your_resend_api_key
+# Email Service (Resend)
+RESEND_API_KEY=re_your_resend_api_key
 ```
+</details>
 
-The frontend expects the API base URL in `client/.env`:
+<details>
+<summary><b>Frontend Environment Setup (client/.env)</b></summary>
+
+Create a `.env` file in the `client/` directory and specify the API gateway URL:
 
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api/v1
 ```
+</details>
 
-## Running the App
+### 3. Launch Development Environments
 
-### Start the backend
+Open two terminal sessions to run both servers:
 
 ```bash
+# Terminal 1: Run Backend API Server
 cd server
 npm run dev
-```
 
-The API starts on the port defined in `PORT`.
-
-### Start the frontend
-
-```bash
+# Terminal 2: Run Frontend Client App
 cd client
 npm run dev
 ```
 
-Vite serves the app locally, usually at `http://localhost:5173`.
+Your browser should open `http://localhost:5173` showing the login portal.
 
-## Available Scripts
+---
 
-### Client
+## 🛠 Available CLI Scripts
 
-From `client/`:
+### Client Workspace
+* `npm run dev`: Launch the local hot-reloading Vite server.
+* `npm run build`: Compile static React files into `/dist` for production.
+* `npm run lint`: Run high-speed static analysis via Oxlint.
+* `npm run preview`: Boot a preview server to test the compiled `/dist` build.
 
-- `npm run dev` - start the Vite development server
-- `npm run build` - create a production build
-- `npm run preview` - preview the production build locally
-- `npm run lint` - run Oxlint
+### Server Workspace
+* `npm run dev`: Launch the backend API server with Nodemon tracking.
+* `npm start`: Launch the backend server in production mode.
 
-### Server
+---
 
-From `server/`:
+## 📝 API Integration Spec Index
 
-- `npm run dev` - start the API with Nodemon
-- `npm start` - start the API in production mode
+All requests are scoped under `/api/v1` and use standard JSON responses. Refer to our dedicated specs:
 
-## API Summary
+* 📄 **[glossary / Definitions](file:///home/bhargab/WebD/invoice-client-management/docs/Definition.md)**
+* 📄 **[API Endpoint List](file:///home/bhargab/WebD/invoice-client-management/docs/EndPoints.md)**
+* 📄 **[Database Schemas](file:///home/bhargab/WebD/invoice-client-management/docs/Entities.md)**
+* 📄 **[Request & Response Payload Formats](file:///home/bhargab/WebD/invoice-client-management/server/documentation/RequestStructure.md)**
 
-The backend exposes versioned REST endpoints under `/api/v1`.
+---
 
-### Health
+## 🤝 Contribution Guidelines
 
-- `GET /api/v1/healthcheck`
+We welcome contributions to InClient! Here is how you can help:
 
-### Auth
+1. **Fork** the repository and create your feature branch: `git checkout -b feature/amazing-feature`.
+2. **Lint check**: Run `npm run lint` inside `client/` to make sure there are no syntax warnings.
+3. **Commit** clean changes following standard git convention.
+4. **Push** your changes: `git push origin feature/amazing-feature` and open a Pull Request.
 
-- `POST /api/v1/auth/signup`
-- `POST /api/v1/auth/login`
-- `POST /api/v1/auth/logout`
-- `POST /api/v1/auth/change-password`
-- `POST /api/v1/auth/forgot-password`
-- `POST /api/v1/auth/reset-password/:token`
-- `GET /api/v1/auth/verify-email/:token`
-- `POST /api/v1/auth/resend-email`
-- `GET /api/v1/auth/me`
-- `POST /api/v1/auth/refresh-token`
-- `DELETE /api/v1/auth/delete`
+---
 
-### Organizations
+## 📄 License
 
-- Organization and related client/invoice/payment routes are mounted under `/api/v1/organizations`
-
-### Invitations
-
-- `POST /api/v1/invitations/:token/accept`
-- `POST /api/v1/invitations/:token/reject`
-
-### Dashboard
-
-- Dashboard analytics endpoints are mounted under `/api/v1/dashboard`
-
-## Frontend Routes
-
-The React app includes public and protected routes for:
-
-- Home
-- Login
-- Signup
-- Dashboard
-- Organizations
-- Members
-- Clients
-- Invoices
-- Payments
-- Invitation response flows
-
-## Deployment Notes
-
-- Set `CLIENT_URL` to the deployed frontend URL
-- Set `CORS_ORIGIN` to the deployed frontend origin
-- Use production MongoDB, Cloudinary, and Resend credentials
-- Ensure cookies and JWT secrets are configured before releasing
-
-## Project Status
-
-The core product is functional and structured for production use, with a few workflows still evolving around advanced actions, analytics depth, and polish. The current implementation already supports the main client, invoice, payment, organization, and invitation flows.
-
-## License
-
-ISC
+Distributed under the **ISC** License. See the [LICENSE](file:///home/bhargab/WebD/invoice-client-management/LICENSE) file for more details.

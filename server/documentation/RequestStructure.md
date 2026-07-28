@@ -1,88 +1,73 @@
-# Request Structure
+# API Request & Payload Structure Specification
 
 Base URL: `/api/v1`
 
-This file documents the expected request shape for each mounted route in the server. It is meant as a frontend integration guide, so each endpoint is grouped by resource and includes:
+This document defines request parameters, body shapes, query parameters, and response structures for integration.
 
-- path params
-- query params
-- request body
-- upload fields, when applicable
+---
 
-## Health Check
+## 1. System Health Check
 
 ### `GET /healthcheck`
-
-- Params: none
-- Query: none
-- Body: none
-
-## Auth
-
-### `POST /auth/signup`
-
-- Params: none
-- Query: none
-- Body:
+* **Params**: None
+* **Query**: None
+* **Body**: None
+* **Success Response (200)**:
 ```json
 {
-  "name": "Jane Doe",
-  "email": "jane@example.com",
-  "password": "StrongPassword123"
+  "statusCode": 200,
+  "data": null,
+  "message": "Health check successful"
 }
 ```
-- Upload:
-  - `avatar` as `multipart/form-data`
+
+---
+
+## 2. Authentication & Sessions (`/auth`)
+
+### `POST /auth/signup`
+* **Content-Type**: `multipart/form-data`
+* **Body (form fields)**:
+  * `name`: string (required)
+  * `email`: string (required)
+  * `password`: string (required)
+  * `avatar`: file (optional)
 
 ### `POST /auth/login`
-
-- Params: none
-- Query: none
-- Body:
+* **Body**:
 ```json
 {
-  "email": "jane@example.com",
+  "email": "user@example.com",
   "password": "StrongPassword123"
 }
 ```
 
 ### `POST /auth/logout`
-
-- Auth required
-- Params: none
-- Query: none
-- Body: none
+* **Auth**: JWT required
+* **Body**: None
 
 ### `POST /auth/change-password`
-
-- Auth required
-- Params: none
-- Query: none
-- Body:
+* **Auth**: JWT required
+* **Body**:
 ```json
 {
-  "oldPassword": "OldPassword123",
+  "oldPassword": "CurrentPassword123",
   "newPassword": "NewPassword123"
 }
 ```
 
 ### `POST /auth/forgot-password`
-
-- Params: none
-- Query: none
-- Body:
+* **Body**:
 ```json
 {
-  "email": "jane@example.com"
+  "email": "user@example.com"
 }
 ```
 
 ### `POST /auth/reset-password/:token`
-
-- Params:
-  - `token`
-- Query: none
-- Body:
+* **Params**:
+  * `token`: string (reset token)
+* **Body**:
 ```json
 {
   "newPassword": "NewPassword123"
@@ -90,553 +75,353 @@ This file documents the expected request shape for each mounted route in the ser
 ```
 
 ### `GET /auth/verify-email/:token`
-
-- Params:
-  - `token`
-- Query: none
-- Body: none
+* **Params**:
+  * `token`: string (verification token)
+* **Body**: None
 
 ### `POST /auth/resend-email`
-
-- Params: none
-- Query: none
-- Body:
+* **Body**:
 ```json
 {
-  "email": "jane@example.com"
+  "email": "user@example.com"
 }
 ```
 
 ### `GET /auth/me`
-
-- Auth required
-- Params: none
-- Query: none
-- Body: none
+* **Auth**: JWT required
+* **Body**: None
 
 ### `POST /auth/refresh-token`
-
-- Params: none
-- Query: none
-- Body:
+* **Body**:
 ```json
 {
-  "refreshToken": "optional-if-not-sent-in-cookie"
+  "refreshToken": "optional-if-supplied-via-cookie"
 }
 ```
 
 ### `DELETE /auth/delete`
+* **Auth**: JWT required
+* **Body**: None
 
-- Auth required
-- Params: none
-- Query: none
-- Body: none
+---
 
-## Organizations
+## 3. Organizations Module (`/organizations`)
 
 ### `POST /organizations`
+* **Auth**: JWT required
+* **Content-Type**: `multipart/form-data`
+* **Body (form fields)**:
+  * `name`: string (required)
+  * `email`: string (optional)
+  * `phone`: string (optional)
+  * `website`: string (optional)
+  * `address`: string (optional)
+  * `taxId`: string (optional)
+  * `currency`: string (optional, default `"USD"`)
+  * `timezone`: string (optional, default `"UTC"`)
+  * `logo`: file (optional)
 
-- Auth required
-- Params: none
-- Query: none
-- Body:
-```json
-{
-  "name": "Acme Pvt Ltd",
-  "email": "billing@acme.com",
-  "phone": "+91-9876543210",
-  "website": "https://acme.com",
-  "address": "Bangalore, India",
-  "taxId": "GSTIN123456",
-  "currency": "INR",
-  "timezone": "Asia/Kolkata"
-}
-```
-- Upload:
-  - `logo` as `multipart/form-data`
+### `GET /organizations`
+* **Auth**: JWT required
+* **Body**: None
 
 ### `GET /organizations/:organizationId`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body: none
+* **Auth**: JWT + Member role check
+* **Params**:
+  * `organizationId`: string (Organization ID)
 
 ### `PATCH /organizations/:organizationId`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body:
-```json
-{
-  "name": "Acme Pvt Ltd",
-  "email": "billing@acme.com",
-  "phone": "+91-9876543210",
-  "website": "https://acme.com",
-  "address": "Bangalore, India",
-  "taxId": "GSTIN123456",
-  "currency": "INR",
-  "timezone": "Asia/Kolkata"
-}
-```
-- Upload:
-  - `logo` as `multipart/form-data` is optional
+* **Auth**: JWT + Owner check
+* **Params**:
+  * `organizationId`: string
+* **Content-Type**: `multipart/form-data`
+* **Body (form fields)**: (all optional)
+  * `name`, `email`, `phone`, `website`, `address`, `taxId`, `currency`, `timezone`, `logo`
 
 ### `DELETE /organizations/:organizationId`
+* **Auth**: JWT + Owner check
+* **Params**:
+  * `organizationId`: string
 
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body: none
+---
 
-### `GET /organizations/:organizationId/members`
+## 4. Tenant-Scoped Sub-Resources
 
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body: none
+### 4.1 Clients (`/organizations/:organizationId/clients`)
 
-### `PATCH /organizations/:organizationId/members/:userId`
+### `POST /`
+* **Auth**: JWT + Member check
+* **Body**:
+```json
+{
+  "name": "Jane Customer",
+  "email": "jane.cust@example.com",
+  "phone": "+91-9876543211",
+  "companyName": "Acme Ventures",
+  "address": "San Francisco, CA",
+  "taxId": "TAX-US-555"
+}
+```
 
-- Auth required
-- Params:
-  - `organizationId`
-  - `userId`
-- Query: none
-- Body:
+### `GET /`
+* **Auth**: JWT + Member check
+* **Query**:
+  * `page`: integer (optional, default `1`)
+  * `limit`: integer (optional, default `10`)
+  * `search`: string (optional, searches name, email, company)
+
+### `GET /:clientId`
+* **Auth**: JWT + Member check
+* **Params**:
+  * `clientId`: string
+
+### `PATCH /:clientId`
+* **Auth**: JWT + Member check
+* **Params**:
+  * `clientId`: string
+* **Body**: (all fields optional)
+  * `name`, `email`, `phone`, `companyName`, `address`, `taxId`
+
+### `DELETE /:clientId`
+* **Auth**: JWT + Owner/Admin check
+* **Params**:
+  * `clientId`: string
+
+### `GET /:clientId/invoices`
+* **Auth**: JWT + Member check
+* **Params**:
+  * `clientId`: string
+
+### `GET /:clientId/stats`
+* **Auth**: JWT + Member check
+* **Params**:
+  * `clientId`: string
+
+---
+
+### 4.2 Invoices (`/organizations/:organizationId/invoices`)
+
+### `POST /`
+* **Auth**: JWT + Member check
+* **Body**:
+```json
+{
+  "client": "60c72b2f9b1d8e2b8c8d8f99",
+  "invoiceNumber": "INV-2026-001",
+  "dueDate": "2026-08-30T00:00:00.000Z",
+  "currency": "USD",
+  "notes": "Payment due within 30 days.",
+  "items": [
+    {
+      "service": "60c72b2f9b1d8e2b8c8d8f00",
+      "description": "Custom CRM Integration",
+      "quantity": 10,
+      "unitPrice": 150,
+      "taxRate": 10,
+      "discountAmount": 50
+    }
+  ],
+  "taxAmount": 150,
+  "discountAmount": 50
+}
+```
+
+### `GET /`
+* **Auth**: JWT + Member check
+* **Query**:
+  * `page`, `limit`, `search` (optional)
+  * `status`: string (optional, e.g. `draft`, `sent`, `paid`, `overdue`)
+  * `client`: string (optional, client ID filter)
+
+### `GET /:invoiceId`
+* **Auth**: JWT + Member check
+* **Params**:
+  * `invoiceId`: string
+
+### `PATCH /:invoiceId`
+* **Auth**: JWT + Owner/Admin check
+* **Params**:
+  * `invoiceId`: string
+* **Body**: (all fields optional, matches POST format)
+
+### `DELETE /:invoiceId`
+* **Auth**: JWT + Owner/Admin check
+* **Params**:
+  * `invoiceId`: string
+
+### `PATCH /:invoiceId/status`
+* **Auth**: JWT + Owner/Admin check
+* **Params**:
+  * `invoiceId`: string
+* **Body**:
+```json
+{
+  "status": "sent"
+}
+```
+
+### `GET /:invoiceId/pdf`
+* **Auth**: JWT + Member check
+* **Params**:
+  * `invoiceId`: string
+
+### `POST /:invoiceId/send`
+* **Auth**: JWT + Member check
+* **Params**:
+  * `invoiceId`: string
+
+---
+
+### 4.3 Payments (`/organizations/:organizationId`)
+
+### `GET /payments` (Org-wide)
+* **Auth**: JWT + Member check
+* **Params**: None (queries all payments of organization)
+
+### `POST /invoices/:invoiceId/payments` (Record Payment)
+* **Auth**: JWT + Owner/Admin check
+* **Params**:
+  * `invoiceId`: string
+* **Body**:
+```json
+{
+  "amount": 1000,
+  "paymentDate": "2026-07-28T18:00:00.000Z",
+  "paymentMethod": "bank_transfer",
+  "referenceNumber": "UTR998877665",
+  "notes": "First partial payment."
+}
+```
+
+### `GET /invoices/:invoiceId/payments` (List payments)
+* **Auth**: JWT + Member check
+* **Params**:
+  * `invoiceId`: string
+
+### `GET /invoices/:invoiceId/payments/:paymentId`
+* **Auth**: JWT + Member check
+* **Params**:
+  * `invoiceId`: string
+  * `paymentId`: string
+
+### `DELETE /invoices/:invoiceId/payments/:paymentId`
+* **Auth**: JWT + Owner/Admin check
+* **Params**:
+  * `invoiceId`: string
+  * `paymentId`: string
+
+---
+
+### 4.4 Service Catalog (`/organizations/:organizationId/services`)
+
+### `POST /`
+* **Auth**: JWT + Owner/Admin check
+* **Body**:
+```json
+{
+  "name": "Backend Consulting",
+  "description": "Express and Node API architecture services.",
+  "unitPrice": 120,
+  "unit": "hour",
+  "taxRate": 18
+}
+```
+
+### `GET /`
+* **Auth**: JWT + Member check
+* **Query**:
+  * `page`, `limit`, `search` (optional)
+  * `active`: string (`"true"` or `"false"`, optional)
+
+### `GET /:serviceId`
+* **Auth**: JWT + Member check
+* **Params**:
+  * `serviceId`: string
+
+### `PATCH /:serviceId`
+* **Auth**: JWT + Owner/Admin check
+* **Params**:
+  * `serviceId`: string
+* **Body**: (all fields optional)
+  * `name`, `description`, `unitPrice`, `unit`, `taxRate`, `isActive`
+
+### `DELETE /:serviceId`
+* **Auth**: JWT + Owner/Admin check
+* **Params**:
+  * `serviceId`: string
+
+---
+
+### 4.5 Memberships & Invitations (`/organizations/:organizationId`)
+
+### `GET /members`
+* **Auth**: JWT + Member check
+
+### `PATCH /members/:userId`
+* **Auth**: JWT + Owner check
+* **Params**:
+  * `userId`: string
+* **Body**:
 ```json
 {
   "role": "admin"
 }
 ```
 
-### `DELETE /organizations/:organizationId/members/:userId`
+### `DELETE /members/:userId`
+* **Auth**: JWT + Owner check
+* **Params**:
+  * `userId`: string
 
-- Auth required
-- Params:
-  - `organizationId`
-  - `userId`
-- Query: none
-- Body: none
-
-### `POST /organizations/:organizationId/invitations`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body:
+### `POST /invitations`
+* **Auth**: JWT + Owner/Admin check
+* **Body**:
 ```json
 {
-  "email": "member@example.com",
+  "email": "invitee@example.com",
   "role": "member"
 }
 ```
 
-### `GET /organizations/:organizationId/invitations`
+### `GET /invitations`
+* **Auth**: JWT + Owner/Admin check
+* **Query**:
+  * `status`: string (optional, e.g. `pending`, `accepted`, `rejected`)
 
-- Auth required
-- Params:
-  - `organizationId`
-- Query:
-  - `status` optional, defaults to `pending`
-- Body: none
+---
 
-### `POST /organizations/:organizationId/clients`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body:
-```json
-{
-  "organizationId": "orgId",
-  "name": "Client Name",
-  "email": "client@example.com",
-  "phone": "+91-9000000000",
-  "companyName": "Client Company",
-  "address": "Client Address",
-  "taxId": "CLIENT-TAX-ID"
-}
-```
-- Note: `organizationId` is required in the body by current controller code, even though it is also present in the route path.
-
-### `GET /organizations/:organizationId/clients`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query:
-  - `page` optional
-  - `limit` optional
-  - `search` optional
-- Body: none
-
-### `GET /organizations/:organizationId/clients/:clientId`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `clientId`
-- Query: none
-- Body: none
-
-### `PATCH /organizations/:organizationId/clients/:clientId`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `clientId`
-- Query: none
-- Body:
-```json
-{
-  "name": "Updated Client Name",
-  "email": "client@example.com",
-  "phone": "+91-9000000000",
-  "companyName": "Updated Company",
-  "address": "Updated Address",
-  "taxId": "UPDATED-TAX-ID"
-}
-```
-
-### `DELETE /organizations/:organizationId/clients/:clientId`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `clientId`
-- Query: none
-- Body: none
-
-### `DELETE /organizations/:organizationId/clients/:clientId/invoices`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `clientId`
-- Query: none
-- Body: none
-- Note: current controller returns a placeholder response.
-
-### `DELETE /organizations/:organizationId/clients/:clientId/stats`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `clientId`
-- Query: none
-- Body: none
-- Note: current controller returns a placeholder response.
-
-## Invoices
-
-### `POST /organizations/:organizationId/invoices`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body:
-```json
-{
-  "clientId": "clientId",
-  "dueDate": "2026-07-31",
-  "currency": "INR",
-  "taxAmount": 0,
-  "discountAmount": 0,
-  "items": [
-    {
-      "description": "Design work",
-      "quantity": 2,
-      "unitPrice": 1500,
-      "taxRate": 18,
-      "discountAmount": 0
-    }
-  ]
-}
-```
-
-### `GET /organizations/:organizationId/invoices`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query:
-  - `page` optional
-  - `limit` optional
-  - `status` optional
-  - `clientId` optional
-  - `search` optional
-- Body: none
-
-### `GET /organizations/:organizationId/invoices/:invoiceId`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `invoiceId`
-- Query: none
-- Body: none
-
-### `PATCH /organizations/:organizationId/invoices/:invoiceId`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `invoiceId`
-- Query: none
-- Body:
-```json
-{
-  "clientId": "clientId",
-  "dueDate": "2026-07-31",
-  "currency": "INR",
-  "taxAmount": 0,
-  "discountAmount": 0,
-  "items": [
-    {
-      "description": "Updated design work",
-      "quantity": 2,
-      "unitPrice": 1800,
-      "taxRate": 18,
-      "discountAmount": 0
-    }
-  ]
-}
-```
-
-### `DELETE /organizations/:organizationId/invoices/:invoiceId`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `invoiceId`
-- Query: none
-- Body: none
-
-### `PATCH /organizations/:organizationId/invoices/:invoiceId/status`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `invoiceId`
-- Query: none
-- Body:
-```json
-{
-  "status": "paid"
-}
-```
-
-Allowed status values:
-- `draft`
-- `sent`
-- `viewed`
-- `partially_paid`
-- `paid`
-- `overdue`
-- `cancelled`
-
-### `GET /organizations/:organizationId/invoices/:invoiceId/pdf`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `invoiceId`
-- Query: none
-- Body: none
-
-### `POST /organizations/:organizationId/invoices/:invoiceId/send`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `invoiceId`
-- Query: none
-- Body: none
-- Note: current controller is a placeholder.
-
-## Payments
-
-### `POST /organizations/:organizationId/invoices/:invoiceId/payments`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `invoiceId`
-- Query: none
-- Body:
-```json
-{
-  "amount": 5000,
-  "paymentDate": "2026-06-23",
-  "paymentMethod": "bank_transfer",
-  "referenceNumber": "UTR123456789"
-}
-```
-
-### `GET /organizations/:organizationId/invoices/:invoiceId/payments`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `invoiceId`
-- Query: none
-- Body: none
-
-### `GET /organizations/:organizationId/invoices/:invoiceId/payments/:paymentId`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `invoiceId`
-  - `paymentId`
-- Query: none
-- Body: none
-
-### `DELETE /organizations/:organizationId/invoices/:invoiceId/payments/:paymentId`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `invoiceId`
-  - `paymentId`
-- Query: none
-- Body: none
-
-## Services
-
-### `POST /organizations/:organizationId/services`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body:
-```json
-{
-  "name": "Website Design",
-  "description": "Landing page and UI design",
-  "unitPrice": 2500,
-  "taxRate": 18,
-  "unit": "project"
-}
-```
-
-### `GET /organizations/:organizationId/services`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query:
-  - `page` optional
-  - `limit` optional
-  - `search` optional
-  - `active` optional, `"true"` or `"false"`
-- Body: none
-
-### `GET /organizations/:organizationId/services/:serviceId`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `serviceId`
-- Query: none
-- Body: none
-
-### `PATCH /organizations/:organizationId/services/:serviceId`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `serviceId`
-- Query: none
-- Body:
-```json
-{
-  "name": "Updated Service Name",
-  "description": "Updated description",
-  "unitPrice": 3000,
-  "taxRate": 18,
-  "unit": "hour",
-  "isActive": true
-}
-```
-
-### `DELETE /organizations/:organizationId/services/:serviceId`
-
-- Auth required
-- Params:
-  - `organizationId`
-  - `serviceId`
-- Query: none
-- Body: none
-
-## Invitations
+## 5. Standalone Invitations
 
 ### `POST /invitations/:token/accept`
-
-- Auth required
-- Params:
-  - `token`
-- Query: none
-- Body: none
+* **Auth**: JWT required
+* **Params**:
+  * `token`: string
 
 ### `POST /invitations/:token/reject`
+* **Auth**: JWT required
+* **Params**:
+  * `token`: string
 
-- Auth required
-- Params:
-  - `token`
-- Query: none
-- Body: none
+---
 
-## Dashboard
+## 6. Dashboard Metrics (`/dashboard/:organizationId`)
 
 ### `GET /dashboard/:organizationId/overview`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body: none
+* **Auth**: JWT + Member check
+* **Params**:
+  * `organizationId`: string
 
 ### `GET /dashboard/:organizationId/monthly-revenue`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body: none
+* **Auth**: JWT + Member check
+* **Params**:
+  * `organizationId`: string
 
 ### `GET /dashboard/:organizationId/recent-invoices`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body: none
+* **Auth**: JWT + Member check
+* **Params**:
+  * `organizationId`: string
 
 ### `GET /dashboard/:organizationId/top-clients`
-
-- Auth required
-- Params:
-  - `organizationId`
-- Query: none
-- Body: none
-
-## Notes
-
-- All protected routes rely on JWT authentication.
-- Several routes also enforce role checks in middleware.
-- Some controller methods currently return placeholder responses, especially:
-  - `DELETE /organizations/:organizationId/clients/:clientId/invoices`
-  - `DELETE /organizations/:organizationId/clients/:clientId/stats`
-  - `POST /organizations/:organizationId/invoices/:invoiceId/send`
-- Request/response field names come from the current controller code, so if the backend changes, this file should be updated too.
+* **Auth**: JWT + Member check
+* **Params**:
+  * `organizationId`: string
