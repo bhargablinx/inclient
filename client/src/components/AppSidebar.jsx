@@ -2,9 +2,9 @@
 
 import * as React from "react";
 
-import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
-import { OrganizationSwitcher } from "@/components/organization-switcher";
+import { NavMain } from "@/components/NavMain";
+import { NavUser } from "@/components/NavUser";
+import { OrganizationSwitcher } from "@/components/OrganizationSwitcher";
 import {
     Sidebar,
     SidebarContent,

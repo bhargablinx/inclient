@@ -9,13 +9,13 @@ import { authorizeRoles, verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route("/:organizationId/overview").get(verifyJWT, getOverview);
+router.route("/:organizationId/overview").get(verifyJWT, authorizeRoles("owner", "admin", "member"), getOverview);
 router
     .route("/:organizationId/monthly-revenue")
-    .get(verifyJWT, getMonthlyRevenue);
+    .get(verifyJWT, authorizeRoles("owner", "admin", "member"), getMonthlyRevenue);
 router
     .route("/:organizationId/recent-invoices")
-    .get(verifyJWT, getRecentInvoices);
-router.route("/:organizationId/top-clients").get(verifyJWT, getTopClients);
+    .get(verifyJWT, authorizeRoles("owner", "admin", "member"), getRecentInvoices);
+router.route("/:organizationId/top-clients").get(verifyJWT, authorizeRoles("owner", "admin", "member"), getTopClients);
 
 export default router;
