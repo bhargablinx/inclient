@@ -67,26 +67,26 @@
 
 ```mermaid
 graph LR
-    subgraph Client Application React
+    subgraph ClientApp ["Client Application React"]
         A[React Router DOM] --> B[Redux Toolkit Store]
         B --> C[Axios API Client]
     end
 
-    subgraph API Gateways Express
+    subgraph APIGateway ["API Gateways Express"]
         C --> D[verifyJWT Middleware]
         D --> E[authorizeRoles Tenant Guard]
         E --> F[Resource Routes]
     end
 
-    subgraph Storage & Providers
+    subgraph StorageProviders ["Storage & Providers"]
         F --> G[(MongoDB Database)]
         F --> H[Cloudinary Media Bucket]
         F --> I[Resend Email Dispatch]
     end
     
-    style Client Application React fill:#e1f5fe,stroke:#039be5,stroke-width:2px;
-    style API Gateways Express fill:#efebe9,stroke:#5d4037,stroke-width:2px;
-    style Storage & Providers fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    style ClientApp fill:#e1f5fe,stroke:#039be5,stroke-width:2px;
+    style APIGateway fill:#efebe9,stroke:#5d4037,stroke-width:2px;
+    style StorageProviders fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
 ```
 
 ---
