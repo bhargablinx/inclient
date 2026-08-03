@@ -55,8 +55,16 @@
 * **Multi-Tenancy Isolation**: Strong boundaries ensuring that memberships, configurations, services, and transactions are strictly scoped to the active tenant/organization.
 * **Role-Based Access Control (RBAC)**: Fine-grained permissions for **Owner**, **Admin**, and **Member** roles.
 * **Service Catalog Registry**: Standardizes invoice generation. Users save services with preset pricing and tax criteria, then auto-fill invoice line items.
-* **Dynamic Invoice Calculations**: The system handles line item totals, custom tax rates, discount deductions, subtotals, and outstanding balance tracking.
-* **Real-time Payments Ledger**: Log partial or full invoice payments. Balances are recalculated on the fly, auto-updating invoice statuses to `partially_paid` or `paid`.
+* **Dynamic Invoice Calculations & Duplication**: Handles line item totals, tax rates, discount deductions, subtotals, balance tracking, and one-click atomic transaction invoice duplication (`duplicateInvoice`).
+* **Vector PDF Generation & Export**: Built-in server-side PDFKit rendering engine to preview invoices inline or trigger direct attachment PDF file downloads.
+* **Email Invoice Dispatching**: Automatic generation of rich HTML invoice notifications sent to client email addresses via Resend integration (`sendInvoice`).
+* **Real-time Payments Ledger & Modification**: Log, edit, or delete partial/full payments. Balances are recalculated in real time within Mongoose transactions, updating invoice status to `partially_paid` or `paid`.
+* **Enterprise Security Suite**:
+  - **CSRF Protection**: Custom double-submit token verification middleware.
+  - **Security Headers**: Integrated `helmet` (CSP, HSTS, X-Frame-Options, X-Content-Type-Options: nosniff) and disabled Express `x-powered-by` header.
+  - **Brute-Force Rate Limiting**: Endpoint protection via `express-rate-limit` for global and authentication routes.
+  - **Injection & Path Traversal Shields**: ReDoS meta-character escaping and randomized UUID file storage (`crypto.randomUUID()`).
+  - **Password Complexity Validation**: Enforces length, uppercase, lowercase, numeric, and special character policies across signup and reset workflows.
 * **Team Invitation Flow**: Owner and Admin users can invite team members via secure, tokenized onboarding emails.
 * **Analytics Engine**: Out-of-the-box charts for monthly revenue growth, invoice state breakdowns, and high-value customer rankings.
 * **Soft Deletion Profiles**: Preserves referential integrity by marking user accounts as inactive (`isDeleted: true`) rather than performing hard deletions.
@@ -225,6 +233,7 @@ All requests are scoped under `/api/v1` and use standard JSON responses. Refer t
 * 📄 **[API Endpoint List](file:///home/bhargab/WebD/invoice-client-management/docs/EndPoints.md)**
 * 📄 **[Database Schemas](file:///home/bhargab/WebD/invoice-client-management/docs/Entities.md)**
 * 📄 **[Request & Response Payload Formats](file:///home/bhargab/WebD/invoice-client-management/server/documentation/RequestStructure.md)**
+* 📄 **[Codebase Security Audit & Production Report](file:///home/bhargab/WebD/invoice-client-management/docs/ideas.md)**
 
 ---
 
