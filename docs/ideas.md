@@ -135,9 +135,9 @@ graph TD
     E --> E1["updatePayment() (stubbed in payment.controller.js)"]
 ```
 
-### 3.1 PDF Generation & Download (`generateInvoicePdf`, `downloadInvoice`)
+### 3.1 PDF Generation & Download (`generateInvoicePdf`, `downloadInvoice`) (Status: ✅ FIXED)
 * **Requirement**: Users must be able to export professional, client-ready invoice representations.
-* **Remediation**: Integrate a library like `pdfkit` or `html-pdf-node` to compile HTML/handlebars templates with invoice line items and organization assets, producing a binary stream or saving to temporary directory storage.
+* **Remediation**: Integrated `pdfkit` in `generatePdf.js` to compile vector PDF documents with Organization branding, Client information, itemized line tables, and balance totals, streaming inline (`generateInvoicePdf`) or attachment downloads (`downloadInvoice`). Added "View PDF" and "Download PDF" buttons in the React dashboard (`InvoiceDetails.jsx`).
 
 ### 3.2 Invoice Dispatching via Email (`sendInvoice`)
 * **Requirement**: Allow users to email invoices directly to their clients through the dashboard.

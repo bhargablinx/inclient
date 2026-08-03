@@ -26,5 +26,10 @@ export const generateInvoicePdf = (organizationId, invoiceId) =>
         responseType: "blob",
     });
 
+export const downloadInvoicePdf = (organizationId, invoiceId) =>
+    api.get(`/organizations/${organizationId}/invoices/${invoiceId}/download`, {
+        responseType: "blob",
+    });
+
 export const sendInvoice = (organizationId, invoiceId, data) =>
     api.post(`/organizations/${organizationId}/invoices/${invoiceId}/send`, data);

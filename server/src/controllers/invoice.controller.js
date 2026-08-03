@@ -4,8 +4,11 @@ import asyncHandler from "../utils/asyncHandler.js";
 import Client from "../models/client.model.js";
 import Invoice from "../models/invoice.model.js";
 import InvoiceItem from "../models/invoiceItem.model.js";
+import Organization from "../models/organization.model.js";
 import mongoose from "mongoose";
 import { escapeRegex } from "../utils/escapeRegex.js";
+import PDFDocument from "pdfkit";
+import { buildInvoicePdf } from "../utils/generatePdf.js";
 
 const createInvoice = asyncHandler(async (req, res) => {
     const { organizationId } = req.params;
@@ -436,9 +439,35 @@ const updateInvoiceStatus = asyncHandler(async (req, res) => {
         );
 });
 
-// TO BE IMPLEMENTED LATER
 const generateInvoicePdf = asyncHandler(async (req, res) => {
-    res.status(200).json(new ApiResponse(200, null, "Server is running!!"));
+    const { organizationId, invoiceId } = req.params;
+
+    const invoice = await Invoice.findOne({
+        _id: invoiceId,
+        organization: organizationId,
+    })
+        .populate("client", "name email phone companyName address taxId")
+        .populate("createdBy", "name email")
+        .lean();
+
+    if (!invoice) {
+        throw new ApiError(404, "Invoice not found");
+    }
+
+    const organization = await Organization.findById(organizationId).lean();
+    const items = await InvoiceItem.find({ invoice: invoiceId }).lean();
+
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+        "Content-Disposition",
+        `inline; filename="Invoice-${invoice.invoiceNumber}.pdf"`
+    );
+
+    doc.pipe(res);
+    buildInvoicePdf(doc, { invoice, items, organization });
+    doc.end();
 });
 
 const sendInvoice = asyncHandler(async (req, res) => {
@@ -450,7 +479,34 @@ const duplicateInvoice = asyncHandler(async (req, res) => {
 });
 
 const downloadInvoice = asyncHandler(async (req, res) => {
-    res.status(200).json(new ApiResponse(200, null, "Server is running!!"));
+    const { organizationId, invoiceId } = req.params;
+
+    const invoice = await Invoice.findOne({
+        _id: invoiceId,
+        organization: organizationId,
+    })
+        .populate("client", "name email phone companyName address taxId")
+        .populate("createdBy", "name email")
+        .lean();
+
+    if (!invoice) {
+        throw new ApiError(404, "Invoice not found");
+    }
+
+    const organization = await Organization.findById(organizationId).lean();
+    const items = await InvoiceItem.find({ invoice: invoiceId }).lean();
+
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="Invoice-${invoice.invoiceNumber}.pdf"`
+    );
+
+    doc.pipe(res);
+    buildInvoicePdf(doc, { invoice, items, organization });
+    doc.end();
 });
 
 export {

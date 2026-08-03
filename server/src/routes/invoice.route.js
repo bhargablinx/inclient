@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
     createInvoice,
     deleteInvoice,
+    downloadInvoice,
     generateInvoicePdf,
     getInvoice,
     getInvoices,
@@ -33,6 +34,9 @@ router.route("/:invoiceId/status")
 
 router.route("/:invoiceId/pdf")
     .get(generateInvoicePdf);
+
+router.route("/:invoiceId/download")
+    .get(downloadInvoice);
 
 router.route("/:invoiceId/send")
     .post(sendInvoice);

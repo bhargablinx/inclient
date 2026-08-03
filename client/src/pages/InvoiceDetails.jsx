@@ -6,6 +6,7 @@ import Loading from "@/components/Loading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInvoice } from "@/features/invoices/invoiceThunk";
+import { generateInvoicePdf, downloadInvoicePdf } from "@/api/invoice.api";
 
 const InvoiceDetails = () => {
     const dispatch = useDispatch();
@@ -33,6 +34,36 @@ const InvoiceDetails = () => {
     const invoice = selectedInvoice?.invoice || selectedInvoice;
     const items = selectedInvoice?.items ?? [];
 
+    const handleViewPdf = async () => {
+        if (!activeOrganization?._id || !invoiceId) return;
+        try {
+            const response = await generateInvoicePdf(activeOrganization._id, invoiceId);
+            const blob = new Blob([response.data], { type: "application/pdf" });
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, "_blank");
+        } catch (error) {
+            console.error("Failed to view PDF", error);
+        }
+    };
+
+    const handleDownloadPdf = async () => {
+        if (!activeOrganization?._id || !invoiceId) return;
+        try {
+            const response = await downloadInvoicePdf(activeOrganization._id, invoiceId);
+            const blob = new Blob([response.data], { type: "application/pdf" });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Invoice-${invoice?.invoiceNumber || "document"}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Failed to download PDF", error);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-start justify-between gap-4">
@@ -49,9 +80,17 @@ const InvoiceDetails = () => {
                     </p>
                 </div>
 
-                <Button variant="outline" onClick={() => navigate(-1)}>
-                    Back
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={handleViewPdf}>
+                        View PDF
+                    </Button>
+                    <Button onClick={handleDownloadPdf}>
+                        Download PDF
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate(-1)}>
+                        Back
+                    </Button>
+                </div>
             </div>
 
             <Card>
