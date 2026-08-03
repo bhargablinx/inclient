@@ -29,7 +29,7 @@ The following table summarizes the security vulnerabilities found across the bac
 | **SEC-007** | Missing HTTP Security Headers                  | **Medium**   | ✅ **FIXED**   | Lack of headers like CSP, HSTS, and Frame options exposes browser shell. | [app.js](file:///home/bhargab/WebD/invoice-client-management/server/src/app.js)                                                         |
 | **SEC-008** | Insecure Hardcoded Cookies in Development      | **Low**      | ✅ **FIXED**   | Dev environments served over HTTP fail to store secure session cookies.  | [auth.controller.js:L13-L16](file:///home/bhargab/WebD/invoice-client-management/server/src/controllers/auth.controller.js#L13-L16)     |
 | **SEC-009** | Information Leakage via `X-Powered-By` Header  | **Low**      | ✅ **FIXED**   | Leaks Express.js runtime framework to external observers.                | [app.js](file:///home/bhargab/WebD/invoice-client-management/server/src/app.js)                                                         |
-| **SEC-010** | Lack of Password Complexity Enforcements       | **Low**      | ⏳ **PENDING** | Allows users to choose highly guessable or weak passwords.               | [auth.controller.js](file:///home/bhargab/WebD/invoice-client-management/server/src/controllers/auth.controller.js)                     |
+| **SEC-010** | Lack of Password Complexity Enforcements       | **Low**      | ✅ **FIXED**   | Allows users to choose highly guessable or weak passwords.               | [passwordValidator.js](file:///home/bhargab/WebD/invoice-client-management/server/src/utils/passwordValidator.js)                       |
 
 ### Detailed Findings & Remediation
 

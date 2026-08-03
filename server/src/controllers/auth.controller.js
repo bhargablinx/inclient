@@ -9,6 +9,7 @@ import {
     verifyEmailTemplate,
     forgotPasswordTemplate,
 } from "../utils/emailTemplate.js";
+import { validatePasswordStrength } from "../utils/passwordValidator.js";
 
 const cookieOption = {
     httpOnly: true,
@@ -41,6 +42,11 @@ const signup = asyncHandler(async (req, res) => {
 
     if (!name || !email || !password)
         throw new ApiError(400, "Required Filed is Missing!");
+
+    const passwordError = validatePasswordStrength(password);
+    if (passwordError) {
+        throw new ApiError(400, passwordError);
+    }
 
     // if (!req.file) throw new ApiError(400, "Avatar is required!");
 
@@ -143,6 +149,11 @@ const changePassword = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required");
     }
 
+    const passwordError = validatePasswordStrength(newPassword);
+    if (passwordError) {
+        throw new ApiError(400, passwordError);
+    }
+
     const user = await User.findById(req.user._id);
 
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
@@ -205,8 +216,10 @@ const resetPassword = asyncHandler(async (req, res) => {
     if (!user) throw new ApiError(404, "Invalid or expired token");
 
     const { newPassword } = req.body;
-    if (!newPassword || newPassword.length < 8)
-        throw new ApiError(400, "Password must be at least 8 characters");
+    const passwordError = validatePasswordStrength(newPassword);
+    if (passwordError) {
+        throw new ApiError(400, passwordError);
+    }
 
     user.password = newPassword;
     user.passwordRecoveryToken = undefined;
