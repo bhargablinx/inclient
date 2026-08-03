@@ -6,6 +6,7 @@ import Organization from "../models/organization.model.js";
 import Client from "../models/client.model.js";
 import Invoice from "../models/invoice.model.js";
 import mongoose from "mongoose";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const createClient = asyncHandler(async (req, res) => {
     const { organizationId, name, email, phone, companyName, address, taxId } =
@@ -82,10 +83,11 @@ const getClients = asyncHandler(async (req, res) => {
     };
 
     if (search) {
+        const safeSearch = escapeRegex(search);
         filter.$or = [
-            { name: { $regex: search, $options: "i" } },
-            { email: { $regex: search, $options: "i" } },
-            { companyName: { $regex: search, $options: "i" } },
+            { name: { $regex: safeSearch, $options: "i" } },
+            { email: { $regex: safeSearch, $options: "i" } },
+            { companyName: { $regex: safeSearch, $options: "i" } },
         ];
     }
 

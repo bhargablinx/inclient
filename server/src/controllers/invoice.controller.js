@@ -5,6 +5,7 @@ import Client from "../models/client.model.js";
 import Invoice from "../models/invoice.model.js";
 import InvoiceItem from "../models/invoiceItem.model.js";
 import mongoose from "mongoose";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const createInvoice = asyncHandler(async (req, res) => {
     const { organizationId } = req.params;
@@ -147,7 +148,7 @@ const getInvoices = asyncHandler(async (req, res) => {
 
     if (search) {
         filter.invoiceNumber = {
-            $regex: search,
+            $regex: escapeRegex(search),
             $options: "i",
         };
     }

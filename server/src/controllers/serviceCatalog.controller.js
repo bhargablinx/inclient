@@ -2,6 +2,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ServiceCatalog from "../models/serviceCatalog.model.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const createService = asyncHandler(async (req, res) => {
     const { organizationId } = req.params;
@@ -27,7 +28,7 @@ const createService = asyncHandler(async (req, res) => {
     const existingService = await ServiceCatalog.findOne({
         organization: organizationId,
         name: {
-            $regex: `^${normalizedName}$`,
+            $regex: `^${escapeRegex(normalizedName)}$`,
             $options: "i",
         },
     });
@@ -66,7 +67,7 @@ const getServices = asyncHandler(async (req, res) => {
 
     if (search) {
         filter.name = {
-            $regex: search,
+            $regex: escapeRegex(search),
             $options: "i",
         };
     }
@@ -145,7 +146,7 @@ const updateService = asyncHandler(async (req, res) => {
             organization: organizationId,
             _id: { $ne: serviceId },
             name: {
-                $regex: `^${name.trim()}$`,
+                $regex: `^${escapeRegex(name.trim())}$`,
                 $options: "i",
             },
         });
