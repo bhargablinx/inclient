@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import "dotenv/config";
 import cookieParser from "cookie-parser";
 import { verifyCSRF } from "./middlewares/csrf.middleware.js";
@@ -12,6 +13,13 @@ import invitationRouter from "./routes/invitation.route.js";
 import dashboardRouter from "./routes/dashboard.route.js";
 
 const app = express();
+
+app.disable("x-powered-by");
+app.use(
+    helmet({
+        crossOriginResourcePolicy: { policy: "cross-origin" },
+    })
+);
 
 app.use(
     cors({
