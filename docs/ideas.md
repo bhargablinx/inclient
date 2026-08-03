@@ -139,9 +139,9 @@ graph TD
 * **Requirement**: Users must be able to export professional, client-ready invoice representations.
 * **Remediation**: Integrated `pdfkit` in `generatePdf.js` to compile vector PDF documents with Organization branding, Client information, itemized line tables, and balance totals, streaming inline (`generateInvoicePdf`) or attachment downloads (`downloadInvoice`). Added "View PDF" and "Download PDF" buttons in the React dashboard (`InvoiceDetails.jsx`).
 
-### 3.2 Invoice Dispatching via Email (`sendInvoice`)
+### 3.2 Invoice Dispatching via Email (`sendInvoice`) (Status: ✅ FIXED)
 * **Requirement**: Allow users to email invoices directly to their clients through the dashboard.
-* **Remediation**: Leverage the configured `Resend` client to compile dynamic HTML mail layouts, attaching the generated invoice PDF, and tracking delivery status.
+* **Remediation**: Added `invoiceEmailTemplate` in `emailTemplate.js`, implemented `sendInvoice` in `invoice.controller.js` to dispatch rich HTML invoice notifications with amount & due date details via Resend to the client's email, auto-promoting draft invoices to `sent` status, and connected the "Send Email" action button in `InvoiceDetails.jsx`.
 
 ### 3.3 Invoice Duplication (`duplicateInvoice`)
 * **Requirement**: Speed up repetitive billing by allowing users to duplicate previous invoice configurations.

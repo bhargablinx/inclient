@@ -6,7 +6,7 @@ import Loading from "@/components/Loading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInvoice } from "@/features/invoices/invoiceThunk";
-import { generateInvoicePdf, downloadInvoicePdf } from "@/api/invoice.api";
+import { generateInvoicePdf, downloadInvoicePdf, sendInvoice } from "@/api/invoice.api";
 
 const InvoiceDetails = () => {
     const dispatch = useDispatch();
@@ -64,6 +64,18 @@ const InvoiceDetails = () => {
         }
     };
 
+    const handleSendEmail = async () => {
+        if (!activeOrganization?._id || !invoiceId) return;
+        try {
+            await sendInvoice(activeOrganization._id, invoiceId);
+            dispatch(getInvoice({ organizationId: activeOrganization._id, invoiceId }));
+            alert(`Invoice #${invoice?.invoiceNumber} emailed successfully!`);
+        } catch (error) {
+            console.error("Failed to send invoice email", error);
+            alert(error.response?.data?.message || "Failed to send email");
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-start justify-between gap-4">
@@ -81,6 +93,9 @@ const InvoiceDetails = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={handleSendEmail}>
+                        Send Email
+                    </Button>
                     <Button variant="outline" onClick={handleViewPdf}>
                         View PDF
                     </Button>

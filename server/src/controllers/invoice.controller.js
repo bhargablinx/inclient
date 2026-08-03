@@ -9,6 +9,8 @@ import mongoose from "mongoose";
 import { escapeRegex } from "../utils/escapeRegex.js";
 import PDFDocument from "pdfkit";
 import { buildInvoicePdf } from "../utils/generatePdf.js";
+import { sendMail } from "../utils/sendMail.js";
+import { invoiceEmailTemplate } from "../utils/emailTemplate.js";
 
 const createInvoice = asyncHandler(async (req, res) => {
     const { organizationId } = req.params;
@@ -471,7 +473,50 @@ const generateInvoicePdf = asyncHandler(async (req, res) => {
 });
 
 const sendInvoice = asyncHandler(async (req, res) => {
-    res.status(200).json(new ApiResponse(200, null, "Server is running!!"));
+    const { organizationId, invoiceId } = req.params;
+
+    const invoice = await Invoice.findOne({
+        _id: invoiceId,
+        organization: organizationId,
+    }).populate("client", "name companyName email");
+
+    if (!invoice) {
+        throw new ApiError(404, "Invoice not found");
+    }
+
+    if (!invoice.client?.email) {
+        throw new ApiError(400, "Client does not have a valid email address");
+    }
+
+    const organization = await Organization.findById(organizationId).lean();
+    const organizationName = organization?.name || "InClient Organization";
+    const clientName = invoice.client.companyName || invoice.client.name || "Valued Client";
+
+    const invoiceUrl = `${process.env.CLIENT_URL}/invoices/${invoice._id}`;
+
+    try {
+        await sendMail(
+            invoice.client.email,
+            `Invoice #${invoice.invoiceNumber} from ${organizationName}`,
+            invoiceEmailTemplate(invoice, organizationName, clientName, invoiceUrl)
+        );
+    } catch (error) {
+        console.error("Error sending invoice email:", error);
+        throw new ApiError(500, "Failed to send invoice email");
+    }
+
+    if (invoice.status === "draft") {
+        invoice.status = "sent";
+        await invoice.save();
+    }
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            invoice,
+            `Invoice #${invoice.invoiceNumber} emailed to ${invoice.client.email} successfully!`
+        )
+    );
 });
 
 const duplicateInvoice = asyncHandler(async (req, res) => {
