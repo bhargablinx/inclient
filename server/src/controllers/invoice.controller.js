@@ -520,7 +520,83 @@ const sendInvoice = asyncHandler(async (req, res) => {
 });
 
 const duplicateInvoice = asyncHandler(async (req, res) => {
-    res.status(200).json(new ApiResponse(200, null, "Server is running!!"));
+    const { organizationId, invoiceId } = req.params;
+
+    const sourceInvoice = await Invoice.findOne({
+        _id: invoiceId,
+        organization: organizationId,
+    });
+
+    if (!sourceInvoice) {
+        throw new ApiError(404, "Invoice not found");
+    }
+
+    const sourceItems = await InvoiceItem.find({ invoice: invoiceId });
+
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const invoiceCount = await Invoice.countDocuments({
+            organization: organizationId,
+        });
+
+        const invoiceNumber = `INV-${String(invoiceCount + 1).padStart(4, "0")}`;
+
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 14);
+
+        const [duplicatedInvoice] = await Invoice.create(
+            [
+                {
+                    organization: organizationId,
+                    client: sourceInvoice.client,
+                    invoiceNumber,
+                    dueDate,
+                    currency: sourceInvoice.currency,
+                    subtotal: sourceInvoice.subtotal,
+                    taxAmount: sourceInvoice.taxAmount,
+                    discountAmount: sourceInvoice.discountAmount,
+                    totalAmount: sourceInvoice.totalAmount,
+                    amountPaid: 0,
+                    balanceDue: sourceInvoice.totalAmount,
+                    status: "draft",
+                    createdBy: req.user._id,
+                },
+            ],
+            { session }
+        );
+
+        if (sourceItems.length > 0) {
+            const duplicatedItems = sourceItems.map((item) => ({
+                invoice: duplicatedInvoice._id,
+                description: item.description,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                taxRate: item.taxRate,
+                discountAmount: item.discountAmount,
+                lineTotal: item.lineTotal,
+            }));
+
+            await InvoiceItem.insertMany(duplicatedItems, { session });
+        }
+
+        await session.commitTransaction();
+
+        return res.status(201).json(
+            new ApiResponse(
+                201,
+                duplicatedInvoice,
+                `Invoice duplicated successfully as ${invoiceNumber}`
+            )
+        );
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        session.endSession();
+    }
 });
 
 const downloadInvoice = asyncHandler(async (req, res) => {

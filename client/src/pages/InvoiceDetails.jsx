@@ -6,7 +6,7 @@ import Loading from "@/components/Loading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInvoice } from "@/features/invoices/invoiceThunk";
-import { generateInvoicePdf, downloadInvoicePdf, sendInvoice } from "@/api/invoice.api";
+import { generateInvoicePdf, downloadInvoicePdf, sendInvoice, duplicateInvoice } from "@/api/invoice.api";
 
 const InvoiceDetails = () => {
     const dispatch = useDispatch();
@@ -76,6 +76,21 @@ const InvoiceDetails = () => {
         }
     };
 
+    const handleDuplicate = async () => {
+        if (!activeOrganization?._id || !invoiceId) return;
+        try {
+            const res = await duplicateInvoice(activeOrganization._id, invoiceId);
+            const duplicated = res.data?.data || res.data;
+            alert(`Invoice duplicated as ${duplicated?.invoiceNumber || "new draft"}!`);
+            if (duplicated?._id) {
+                navigate(`/invoices/${duplicated._id}`);
+            }
+        } catch (error) {
+            console.error("Failed to duplicate invoice", error);
+            alert(error.response?.data?.message || "Failed to duplicate invoice");
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-start justify-between gap-4">
@@ -93,6 +108,9 @@ const InvoiceDetails = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={handleDuplicate}>
+                        Duplicate
+                    </Button>
                     <Button variant="outline" onClick={handleSendEmail}>
                         Send Email
                     </Button>

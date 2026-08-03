@@ -3,6 +3,7 @@ import {
     createInvoice,
     deleteInvoice,
     downloadInvoice,
+    duplicateInvoice,
     generateInvoicePdf,
     getInvoice,
     getInvoices,
@@ -40,5 +41,8 @@ router.route("/:invoiceId/download")
 
 router.route("/:invoiceId/send")
     .post(sendInvoice);
+
+router.route("/:invoiceId/duplicate")
+    .post(authorizeRoles("owner", "admin"), duplicateInvoice);
 
 export default router;

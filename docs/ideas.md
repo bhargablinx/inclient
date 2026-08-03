@@ -143,9 +143,9 @@ graph TD
 * **Requirement**: Allow users to email invoices directly to their clients through the dashboard.
 * **Remediation**: Added `invoiceEmailTemplate` in `emailTemplate.js`, implemented `sendInvoice` in `invoice.controller.js` to dispatch rich HTML invoice notifications with amount & due date details via Resend to the client's email, auto-promoting draft invoices to `sent` status, and connected the "Send Email" action button in `InvoiceDetails.jsx`.
 
-### 3.3 Invoice Duplication (`duplicateInvoice`)
+### 3.3 Invoice Duplication (`duplicateInvoice`) (Status: ✅ FIXED)
 * **Requirement**: Speed up repetitive billing by allowing users to duplicate previous invoice configurations.
-* **Remediation**: Implement a cloning route that reads the target invoice, duplicates its line items, resets the invoice number (generating the next sequence), sets status to `draft`, and updates database records within a mongoose transaction.
+* **Remediation**: Implemented Mongoose transaction-based cloning in `invoice.controller.js` (`duplicateInvoice`) to duplicate target invoices and associated `InvoiceItem`s, auto-generate sequential `INV-XXXX` numbers, reset `amountPaid: 0`, set `status: "draft"`, and added a "Duplicate" button in `InvoiceDetails.jsx`.
 
 ### 3.4 Payment Modification (`updatePayment`)
 * **Requirement**: Allow administrators to fix mistakes or edit payment reference numbers and dates.

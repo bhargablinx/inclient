@@ -33,3 +33,6 @@ export const downloadInvoicePdf = (organizationId, invoiceId) =>
 
 export const sendInvoice = (organizationId, invoiceId, data) =>
     api.post(`/organizations/${organizationId}/invoices/${invoiceId}/send`, data);
+
+export const duplicateInvoice = (organizationId, invoiceId) =>
+    api.post(`/organizations/${organizationId}/invoices/${invoiceId}/duplicate`);
