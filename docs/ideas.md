@@ -21,7 +21,7 @@ The following table summarizes the security vulnerabilities found across the bac
 | ID | Title | Severity | Status | Impact | Location |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **SEC-001** | Token Leakage in Password Reset API | **Critical** | ✅ **FIXED** | Bypasses email validation, allowing arbitrary account takeover. | [auth.controller.js:L186-188](file:///home/bhargab/WebD/invoice-client-management/server/src/controllers/auth.controller.js#L186-L188) |
-| **SEC-002** | Absence of CSRF Protection | **Critical** | ⏳ **PENDING** | Enables Cross-Site Request Forgery via cookie-based sessions. | [auth.middleware.js:L9-L25](file:///home/bhargab/WebD/invoice-client-management/server/src/middlewares/auth.middleware.js#L9-L25) |
+| **SEC-002** | Absence of CSRF Protection | **Critical** | ✅ **FIXED** | Enables Cross-Site Request Forgery via cookie-based sessions. | [csrf.middleware.js](file:///home/bhargab/WebD/invoice-client-management/server/src/middlewares/csrf.middleware.js) |
 | **SEC-003** | Path Traversal / Arbitrary File Write | **High** | ✅ **FIXED** | Trusting raw filenames could lead to remote code execution (RCE). | [multer.middleware.js:L7-L9](file:///home/bhargab/WebD/invoice-client-management/server/src/middlewares/multer.middleware.js#L7-L9) |
 | **SEC-004** | Missing Error Wrapping on `refreshAccessToken` | **High** | ✅ **FIXED** | Unhandled promise rejections can crash the backend server process. | [auth.controller.js:L284](file:///home/bhargab/WebD/invoice-client-management/server/src/controllers/auth.controller.js#L284) |
 | **SEC-005** | ReDoS / NoSQL Query Parameter Injection | **Medium** | ⏳ **PENDING** | Catastrophic regex backtracking blocks Event Loop (Denial of Service). | [client.controller.js:L84-L90](file:///home/bhargab/WebD/invoice-client-management/server/src/controllers/client.controller.js#L84-L90) |
@@ -50,7 +50,7 @@ The following table summarizes the security vulnerabilities found across the bac
   );
   ```
 
-#### SEC-002: Absence of CSRF Protection
+#### SEC-002: Absence of CSRF Protection (Status: ✅ FIXED)
 > [!WARNING]
 > **Impact Statement**: Cookie-based credentials (`req.cookies.accessToken`) will be automatically appended by browsers in cross-site requests, making state-changing routes vulnerable to unauthorized actions by third-party malicious sites.
 
