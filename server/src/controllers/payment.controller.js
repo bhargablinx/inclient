@@ -157,7 +157,84 @@ const getPayment = asyncHandler(async (req, res) => {
 });
 
 const updatePayment = asyncHandler(async (req, res) => {
-    res.status(200).json(new ApiResponse(200, null, "Server is running!!"));
+    const { organizationId, invoiceId, paymentId } = req.params;
+    const { amount, paymentDate, paymentMethod, referenceNumber } = req.body;
+
+    if (amount !== undefined && amount <= 0) {
+        throw new ApiError(400, "Payment amount must be greater than 0");
+    }
+
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const payment = await Payment.findOne({
+            _id: paymentId,
+            organization: organizationId,
+            invoice: invoiceId,
+        }).session(session);
+
+        if (!payment) {
+            throw new ApiError(404, "Payment not found");
+        }
+
+        const invoice = await Invoice.findOne({
+            _id: invoiceId,
+            organization: organizationId,
+        }).session(session);
+
+        if (!invoice) {
+            throw new ApiError(404, "Invoice not found");
+        }
+
+        if (amount !== undefined && amount !== payment.amount) {
+            const currentPaidWithoutPayment = invoice.amountPaid - payment.amount;
+            const maxAllowed = invoice.totalAmount - currentPaidWithoutPayment;
+
+            if (amount > maxAllowed) {
+                throw new ApiError(
+                    400,
+                    `Payment amount (${amount}) exceeds remaining invoice balance (${maxAllowed.toFixed(2)})`
+                );
+            }
+            payment.amount = amount;
+        }
+
+        if (paymentDate !== undefined) payment.paymentDate = paymentDate;
+        if (paymentMethod !== undefined) payment.paymentMethod = paymentMethod;
+        if (referenceNumber !== undefined) payment.referenceNumber = referenceNumber;
+
+        await payment.save({ session });
+
+        const updatedInvoice = await recalculateInvoicePaymentStatus(
+            invoiceId,
+            session
+        );
+
+        await session.commitTransaction();
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {
+                    payment,
+                    invoice: {
+                        _id: updatedInvoice._id,
+                        status: updatedInvoice.status,
+                        amountPaid: updatedInvoice.amountPaid,
+                        balanceDue: updatedInvoice.balanceDue,
+                    },
+                },
+                "Payment updated successfully"
+            )
+        );
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        session.endSession();
+    }
 });
 
 const deletePayment = asyncHandler(async (req, res) => {

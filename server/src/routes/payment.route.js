@@ -4,6 +4,7 @@ import {
     getOrganizationPayments,
     getPayments,
     getPayment,
+    updatePayment,
     deletePayment,
 } from "../controllers/payment.controller.js";
 import { verifyJWT, authorizeRoles } from "../middlewares/auth.middleware.js";
@@ -24,6 +25,7 @@ router.route("/invoices/:invoiceId/payments")
 
 router.route("/invoices/:invoiceId/payments/:paymentId")
     .get(getPayment)
+    .patch(authorizeRoles("owner", "admin"), updatePayment)
     .delete(authorizeRoles("owner", "admin"), deletePayment);
 
 export default router;

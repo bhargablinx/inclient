@@ -147,9 +147,9 @@ graph TD
 * **Requirement**: Speed up repetitive billing by allowing users to duplicate previous invoice configurations.
 * **Remediation**: Implemented Mongoose transaction-based cloning in `invoice.controller.js` (`duplicateInvoice`) to duplicate target invoices and associated `InvoiceItem`s, auto-generate sequential `INV-XXXX` numbers, reset `amountPaid: 0`, set `status: "draft"`, and added a "Duplicate" button in `InvoiceDetails.jsx`.
 
-### 3.4 Payment Modification (`updatePayment`)
+### 3.4 Payment Modification (`updatePayment`) (Status: ✅ FIXED)
 * **Requirement**: Allow administrators to fix mistakes or edit payment reference numbers and dates.
-* **Remediation**: Implement the full handler to update payment values and trigger the financial status recalculation script (`recalculateInvoicePaymentStatus`) to maintain data integrity.
+* **Remediation**: Implemented `updatePayment` in `payment.controller.js` to validate remaining balance boundaries, update payment properties (`amount`, `paymentDate`, `paymentMethod`, `referenceNumber`), invoke `recalculateInvoicePaymentStatus` within a Mongoose transaction, and mounted `PATCH /invoices/:invoiceId/payments/:paymentId` in `payment.route.js`.
 
 ---
 
