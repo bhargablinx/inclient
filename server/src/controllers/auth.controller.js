@@ -12,7 +12,8 @@ import {
 
 const cookieOption = {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
 };
 
 const generateToken = async (userId) => {
@@ -172,19 +173,19 @@ const forgotPassword = asyncHandler(async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     // Password Reset Mail
-    // const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-    // try {
-    //     await sendMail(
-    //         user.email,
-    //         "Reset Your Password",
-    //         forgotPasswordTemplate(user.name, resetUrl)
-    //     );
-    // } catch (error) {
-    //     throw new ApiError(500, "Password reset email could not be sent");
-    // }
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+    try {
+        await sendMail(
+            user.email,
+            "Reset Your Password",
+            forgotPasswordTemplate(user.name, resetUrl)
+        );
+    } catch (error) {
+        throw new ApiError(500, "Password reset email could not be sent");
+    }
 
     res.status(200).json(
-        new ApiResponse(200, resetToken, "Mail sent to your inbox!")
+        new ApiResponse(200, null, "Password reset link sent to your inbox!")
     );
 });
 
@@ -281,13 +282,13 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, currentUser));
 });
 
-const refreshAccessToken = async (req, res) => {
+const refreshAccessToken = asyncHandler(async (req, res) => {
     const clientRefreshToken =
         req.cookies?.refreshToken || req.body?.refreshToken;
 
     if (!clientRefreshToken) throw new ApiError(404, "Token not found");
 
-    const decodedToken = await jwt.verify(
+    const decodedToken = jwt.verify(
         clientRefreshToken,
         process.env.REFRESH_TOKEN_SECRET
     );
@@ -307,7 +308,7 @@ const refreshAccessToken = async (req, res) => {
         .cookie("accessToken", accessToken, cookieOption)
         .cookie("refreshToken", refreshToken, cookieOption)
         .json(new ApiResponse(201, "New Token Created!"));
-};
+});
 
 const deleteUsr = asyncHandler(async (req, res) => {
     const user = req.user;

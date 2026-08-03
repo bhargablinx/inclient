@@ -151,7 +151,7 @@ const rejectInvitation = asyncHandler(async (req, res) => {
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
     const invitation = await Invitation.findOne({
-        token: hashedToken,
+        invitationToken: hashedToken,
         expiresAt: {
             $gt: Date.now(),
         },
@@ -168,7 +168,7 @@ const rejectInvitation = asyncHandler(async (req, res) => {
     }
 
     invitation.status = "rejected";
-    invitation.token = undefined;
+    invitation.invitationToken = undefined;
     invitation.expiresAt = undefined;
 
     await invitation.save({
