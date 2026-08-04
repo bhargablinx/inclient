@@ -9,6 +9,8 @@ import {
     updateClient,
 } from "../controllers/client.controller.js";
 import { verifyJWT, authorizeRoles } from "../middlewares/auth.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import { createClientSchema } from "../validators/schemas.js";
 
 const router = Router({ mergeParams: true });
 
@@ -16,7 +18,7 @@ const router = Router({ mergeParams: true });
 router.use(verifyJWT, authorizeRoles("owner", "admin", "member"));
 
 router.route("/")
-    .post(createClient)
+    .post(validate(createClientSchema), createClient)
     .get(getClients);
 
 router.route("/:clientId")

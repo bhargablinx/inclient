@@ -8,6 +8,8 @@ import {
 } from "../controllers/organization.controller.js";
 import { verifyJWT, authorizeRoles } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import { createOrganizationSchema } from "../validators/schemas.js";
 
 // Sub-routers
 import clientRouter from "./client.route.js";
@@ -19,7 +21,7 @@ import membershipRouter from "./membership.route.js";
 const router = Router();
 
 // Any authorized user can create
-router.route("/").post(upload.single("logo"), verifyJWT, createOrganization);
+router.route("/").post(upload.single("logo"), verifyJWT, validate(createOrganizationSchema), createOrganization);
 router.route("/").get(verifyJWT, getMyOrganizations);
 
 // User for that organization can get info

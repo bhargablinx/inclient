@@ -12,6 +12,8 @@ import {
     updateInvoiceStatus,
 } from "../controllers/invoice.controller.js";
 import { verifyJWT, authorizeRoles } from "../middlewares/auth.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import { createInvoiceSchema } from "../validators/schemas.js";
 
 const router = Router({ mergeParams: true });
 
@@ -19,7 +21,7 @@ const router = Router({ mergeParams: true });
 router.use(verifyJWT, authorizeRoles("owner", "admin", "member"));
 
 router.route("/")
-    .post(createInvoice)
+    .post(validate(createInvoiceSchema), createInvoice)
     .get(getInvoices);
 
 router.route("/:invoiceId")

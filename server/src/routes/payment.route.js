@@ -8,6 +8,8 @@ import {
     deletePayment,
 } from "../controllers/payment.controller.js";
 import { verifyJWT, authorizeRoles } from "../middlewares/auth.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import { createPaymentSchema } from "../validators/schemas.js";
 
 const router = Router({ mergeParams: true });
 
@@ -20,7 +22,7 @@ router.route("/payments")
 
 // Invoice-specific payments
 router.route("/invoices/:invoiceId/payments")
-    .post(authorizeRoles("owner", "admin"), createPayment)
+    .post(authorizeRoles("owner", "admin"), validate(createPaymentSchema), createPayment)
     .get(getPayments);
 
 router.route("/invoices/:invoiceId/payments/:paymentId")
