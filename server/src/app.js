@@ -5,6 +5,7 @@ import "dotenv/config";
 import cookieParser from "cookie-parser";
 import { verifyCSRF } from "./middlewares/csrf.middleware.js";
 import { globalLimiter } from "./middlewares/rateLimiter.middleware.js";
+import { requestLogger } from "./middlewares/requestLogger.middleware.js";
 import healthRouter from "./routes/healthCheck.route.js";
 import authRouter from "./routes/auth.route.js";
 import errorHandler from "./middlewares/errorHandler.middleware.js";
@@ -15,6 +16,7 @@ import dashboardRouter from "./routes/dashboard.route.js";
 const app = express();
 
 app.disable("x-powered-by");
+app.use(requestLogger);
 app.use(
     helmet({
         crossOriginResourcePolicy: { policy: "cross-origin" },
