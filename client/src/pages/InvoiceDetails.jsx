@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
@@ -12,6 +12,7 @@ const InvoiceDetails = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { invoiceId } = useParams();
+    const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
     const { organizations, loading: orgLoading } = useSelector(
         (state) => state.organization,
     );
@@ -33,6 +34,18 @@ const InvoiceDetails = () => {
 
     const invoice = selectedInvoice?.invoice || selectedInvoice;
     const items = selectedInvoice?.items ?? [];
+
+    const handlePreviewPdf = async () => {
+        if (!activeOrganization?._id || !invoiceId) return;
+        try {
+            const response = await generateInvoicePdf(activeOrganization._id, invoiceId);
+            const blob = new Blob([response.data], { type: "application/pdf" });
+            const url = window.URL.createObjectURL(blob);
+            setPdfPreviewUrl(url);
+        } catch (error) {
+            console.error("Failed to preview PDF", error);
+        }
+    };
 
     const handleViewPdf = async () => {
         if (!activeOrganization?._id || !invoiceId) return;
@@ -108,14 +121,14 @@ const InvoiceDetails = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={handlePreviewPdf}>
+                        Preview PDF
+                    </Button>
                     <Button variant="outline" onClick={handleDuplicate}>
                         Duplicate
                     </Button>
                     <Button variant="outline" onClick={handleSendEmail}>
                         Send Email
-                    </Button>
-                    <Button variant="outline" onClick={handleViewPdf}>
-                        View PDF
                     </Button>
                     <Button onClick={handleDownloadPdf}>
                         Download PDF
@@ -125,6 +138,25 @@ const InvoiceDetails = () => {
                     </Button>
                 </div>
             </div>
+
+            {pdfPreviewUrl && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden">
+                        <div className="flex items-center justify-between px-6 py-4 border-b">
+                            <h3 className="font-semibold text-lg">PDF Preview - Invoice #{invoice?.invoiceNumber}</h3>
+                            <Button variant="ghost" size="sm" onClick={() => {
+                                window.URL.revokeObjectURL(pdfPreviewUrl);
+                                setPdfPreviewUrl(null);
+                            }}>
+                                Close
+                            </Button>
+                        </div>
+                        <div className="flex-1 bg-slate-100 p-2">
+                            <iframe src={pdfPreviewUrl} className="w-full h-full rounded border-0" title="PDF Preview" />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Card>
                 <CardHeader>

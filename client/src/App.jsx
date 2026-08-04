@@ -25,6 +25,9 @@ import { useDispatch } from "react-redux";
 import { getCurrentUser } from "./features/auth/authThunk";
 import { getMyOrganizations } from "./features/organization/organizationThunk";
 
+import ErrorBoundary from "./components/ErrorBoundary";
+import OfflineBanner from "./components/OfflineBanner";
+
 function App() {
     const dispatch = useDispatch();
 
@@ -134,7 +137,12 @@ function App() {
         },
     ]);
 
-    return <RouterProvider router={router} />;
+    return (
+        <ErrorBoundary>
+            <OfflineBanner />
+            <RouterProvider router={router} />
+        </ErrorBoundary>
+    );
 }
 
 export default App;
