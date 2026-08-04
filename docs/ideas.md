@@ -160,12 +160,13 @@ To sustain heavy production traffic, the backend architecture must be reinforced
 ### 4.1 Input Validation Middleware (Status: ✅ FIXED)
 * **Remediation**: Created `validate.middleware.js` using `Zod` validation library. Defined Zod schemas in `validators/schemas.js` for `signup`, `login`, `changePassword`, `forgotPassword`, `resetPassword`, `createClient`, `createInvoice`, `createPayment`, and `createOrganization`, validating incoming request payloads at the route entry point.
 
-### 4.2 Mongoose Performance Indexing
+### 4.2 Mongoose Performance Indexing (Status: ✅ FIXED)
 * **Gap**: Core collections (`invoices`, `clients`, `payments`) query by `organization` ID on every operation. As the collections grow, full-table scans will degrade performance.
-* **Remediation**: Add compound indexes on frequently queried fields in models:
-  * **Invoice**: `organization` + `client` + `createdAt`
-  * **Payment**: `organization` + `invoice` + `paymentDate`
-  * **Membership**: `user` + `organization`
+* **Remediation**: Added compound database indexes to optimize query execution and sorting:
+  * **Invoice**: `{ organization: 1, createdAt: -1 }` & `{ organization: 1, client: 1, createdAt: -1 }`
+  * **Payment**: `{ organization: 1, paymentDate: -1 }` & `{ organization: 1, invoice: 1, paymentDate: -1 }`
+  * **Membership**: `{ user: 1, organization: 1 }` (unique) & `{ organization: 1, status: 1 }`
+  * **Client**: `{ organization: 1, name: 1 }` & `{ organization: 1, isActive: 1 }`
 
 ### 4.3 Cascade Deletion Logic
 * **Gap**: Deleting an organization or client leaves orphan invoices, payments, and memberships in the database, compromising referential integrity.

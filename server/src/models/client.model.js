@@ -67,6 +67,16 @@ clientSchema.index(
     }
 );
 
+clientSchema.index({
+    organization: 1,
+    name: 1,
+});
+
+clientSchema.index({
+    organization: 1,
+    isActive: 1,
+});
+
 const Client = mongoose.model("Client", clientSchema);
 
 export default Client;

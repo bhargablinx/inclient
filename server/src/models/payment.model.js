@@ -53,6 +53,17 @@ const paymentSchema = new Schema({
     },
 });
 
+paymentSchema.index({
+    organization: 1,
+    paymentDate: -1,
+});
+
+paymentSchema.index({
+    organization: 1,
+    invoice: 1,
+    paymentDate: -1,
+});
+
 const Payment = mongoose.model("Payment", paymentSchema);
 
 export default Payment;

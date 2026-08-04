@@ -117,6 +117,17 @@ invoiceSchema.index({
     client: 1,
 });
 
+invoiceSchema.index({
+    organization: 1,
+    createdAt: -1,
+});
+
+invoiceSchema.index({
+    organization: 1,
+    client: 1,
+    createdAt: -1,
+});
+
 const Invoice = mongoose.model("Invoice", invoiceSchema);
 
 export default Invoice;
