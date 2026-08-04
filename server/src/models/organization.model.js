@@ -72,6 +72,35 @@ const organizationSchema = new Schema(
     { timestamps: true }
 );
 
+organizationSchema.pre("deleteOne", { document: true, query: false }, async function (next) {
+    const orgId = this._id;
+    const invoiceIds = await mongoose.model("Invoice").find({ organization: orgId }).distinct("_id");
+    await mongoose.model("Invoiceitem").deleteMany({ invoice: { $in: invoiceIds } });
+    await mongoose.model("Invoice").deleteMany({ organization: orgId });
+    await mongoose.model("Payment").deleteMany({ organization: orgId });
+    await mongoose.model("Client").deleteMany({ organization: orgId });
+    await mongoose.model("Servicecatalog").deleteMany({ organization: orgId });
+    await mongoose.model("Membership").deleteMany({ organization: orgId });
+    await mongoose.model("Invitation").deleteMany({ organization: orgId });
+    next();
+});
+
+organizationSchema.pre("findOneAndDelete", async function (next) {
+    const docToQuery = await this.model.findOne(this.getQuery());
+    if (docToQuery) {
+        const orgId = docToQuery._id;
+        const invoiceIds = await mongoose.model("Invoice").find({ organization: orgId }).distinct("_id");
+        await mongoose.model("Invoiceitem").deleteMany({ invoice: { $in: invoiceIds } });
+        await mongoose.model("Invoice").deleteMany({ organization: orgId });
+        await mongoose.model("Payment").deleteMany({ organization: orgId });
+        await mongoose.model("Client").deleteMany({ organization: orgId });
+        await mongoose.model("Servicecatalog").deleteMany({ organization: orgId });
+        await mongoose.model("Membership").deleteMany({ organization: orgId });
+        await mongoose.model("Invitation").deleteMany({ organization: orgId });
+    }
+    next();
+});
+
 const Organization = mongoose.model("Organization", organizationSchema);
 
 export default Organization;

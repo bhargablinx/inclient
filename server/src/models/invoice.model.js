@@ -128,6 +128,21 @@ invoiceSchema.index({
     createdAt: -1,
 });
 
+invoiceSchema.pre("deleteOne", { document: true, query: false }, async function (next) {
+    await mongoose.model("Invoiceitem").deleteMany({ invoice: this._id });
+    await mongoose.model("Payment").deleteMany({ invoice: this._id });
+    next();
+});
+
+invoiceSchema.pre("findOneAndDelete", async function (next) {
+    const docToQuery = await this.model.findOne(this.getQuery());
+    if (docToQuery) {
+        await mongoose.model("Invoiceitem").deleteMany({ invoice: docToQuery._id });
+        await mongoose.model("Payment").deleteMany({ invoice: docToQuery._id });
+    }
+    next();
+});
+
 const Invoice = mongoose.model("Invoice", invoiceSchema);
 
 export default Invoice;

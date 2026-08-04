@@ -168,15 +168,9 @@ To sustain heavy production traffic, the backend architecture must be reinforced
   * **Membership**: `{ user: 1, organization: 1 }` (unique) & `{ organization: 1, status: 1 }`
   * **Client**: `{ organization: 1, name: 1 }` & `{ organization: 1, isActive: 1 }`
 
-### 4.3 Cascade Deletion Logic
+### 4.3 Cascade Deletion Logic (Status: ✅ FIXED)
 * **Gap**: Deleting an organization or client leaves orphan invoices, payments, and memberships in the database, compromising referential integrity.
-* **Remediation**: Use Mongoose pre-remove middleware hooks (`pre("deleteOne")` or `pre("findOneAndDelete")`) to cascade delete related objects:
-  ```javascript
-  clientSchema.pre("deleteOne", { document: true, query: false }, async function (next) {
-      await mongoose.model("Invoice").deleteMany({ client: this._id });
-      next();
-  });
-  ```
+* **Remediation**: Added Mongoose `pre("deleteOne")` and `pre("findOneAndDelete")` cascade middleware hooks to `organization.model.js`, `client.model.js`, and `invoice.model.js` to automatically cascade delete child records (invoices, invoice items, payments, memberships, invitations, service catalogs) upon parent record removal.
 
 ### 4.4 Structured Logging (Audit Trail)
 * **Gap**: The application logs system operations using standard `console.log`, which lacks formatting, timestamps, severity levels, and logs synchronously.

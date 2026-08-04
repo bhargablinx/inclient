@@ -77,6 +77,25 @@ clientSchema.index({
     isActive: 1,
 });
 
+clientSchema.pre("deleteOne", { document: true, query: false }, async function (next) {
+    const invoiceIds = await mongoose.model("Invoice").find({ client: this._id }).distinct("_id");
+    await mongoose.model("Invoiceitem").deleteMany({ invoice: { $in: invoiceIds } });
+    await mongoose.model("Payment").deleteMany({ invoice: { $in: invoiceIds } });
+    await mongoose.model("Invoice").deleteMany({ client: this._id });
+    next();
+});
+
+clientSchema.pre("findOneAndDelete", async function (next) {
+    const docToQuery = await this.model.findOne(this.getQuery());
+    if (docToQuery) {
+        const invoiceIds = await mongoose.model("Invoice").find({ client: docToQuery._id }).distinct("_id");
+        await mongoose.model("Invoiceitem").deleteMany({ invoice: { $in: invoiceIds } });
+        await mongoose.model("Payment").deleteMany({ invoice: { $in: invoiceIds } });
+        await mongoose.model("Invoice").deleteMany({ client: docToQuery._id });
+    }
+    next();
+});
+
 const Client = mongoose.model("Client", clientSchema);
 
 export default Client;
