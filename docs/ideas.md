@@ -182,9 +182,9 @@ To sustain heavy production traffic, the backend architecture must be reinforced
 * **Gap**: The application logs system operations using standard `console.log`, which lacks formatting, timestamps, severity levels, and logs synchronously.
 * **Remediation**: Integrate `winston` or `pino` logger. Configure structured JSON outputs, write to log files for persistence, and establish log-level priorities (`info`, `warn`, `error`).
 
-### 4.5 Environmental Setup Verification
+### 4.5 Environmental Setup Verification (Status: ✅ FIXED)
 * **Gap**: Missing env variables can lead to confusing runtime errors down the line.
-* **Remediation**: Create a verification script running on startup (`config.js` or `index.js`) to assert the existence of required keys (`MONGODB_URL`, `ACCESS_TOKEN_SECRET`, `RESEND_API_KEY`, etc.) and throw immediate errors if missing.
+* **Remediation**: Created `validateEnv.js` utility, invoked on server startup in `index.js` before DB instantiation to assert required environment keys (`MONGODB_URL`, `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`, `CORS_ORIGIN`, `CLIENT_URL`), throwing explicit startup errors and issuing non-blocking warnings for missing optional keys (`CLOUDINARY_*`, `RESEND_API_KEY`).
 
 ---
 
