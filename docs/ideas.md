@@ -157,9 +157,8 @@ graph TD
 
 To sustain heavy production traffic, the backend architecture must be reinforced:
 
-### 4.1 Input Validation Middleware
-* **Gap**: The controller endpoints perform ad-hoc request body checks. Missing or invalid formats lead to unhandled DB casting errors.
-* **Remediation**: Add a validation library like `Zod` or `Joi`. Define schemas for signup, login, invoice creation, and payment payloads, validation-checking incoming values at the route entry point.
+### 4.1 Input Validation Middleware (Status: ✅ FIXED)
+* **Remediation**: Created `validate.middleware.js` using `Zod` validation library. Defined Zod schemas in `validators/schemas.js` for `signup`, `login`, `changePassword`, `forgotPassword`, `resetPassword`, `createClient`, `createInvoice`, `createPayment`, and `createOrganization`, validating incoming request payloads at the route entry point.
 
 ### 4.2 Mongoose Performance Indexing
 * **Gap**: Core collections (`invoices`, `clients`, `payments`) query by `organization` ID on every operation. As the collections grow, full-table scans will degrade performance.
