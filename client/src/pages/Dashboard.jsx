@@ -21,10 +21,9 @@ import { getServices } from "@/features/services/serviceThunk";
 
 const Dashboard = () => {
     const dispatch = useDispatch();
-    const { organizations, loading: orgLoading } = useSelector(
+    const { activeOrganization, loading: orgLoading } = useSelector(
         (state) => state.organization,
     );
-    const activeOrganization = organizations[0];
     const { overview, monthlyRevenue, recentInvoices, topClients, loading } =
         useSelector((state) => state.dashboard);
     const { services } = useSelector((state) => state.services);

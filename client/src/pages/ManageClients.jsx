@@ -13,10 +13,9 @@ import { getClients } from "@/features/clients/clientThunk";
 
 const ManageClients = () => {
     const dispatch = useDispatch();
-    const { organizations, loading: orgLoading } = useSelector(
+    const { activeOrganization, loading: orgLoading } = useSelector(
         (state) => state.organization,
     );
-    const activeOrganization = organizations[0];
     const [dialogOpen, setDialogOpen] = useState(false);
     const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(true);

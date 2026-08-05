@@ -17,8 +17,7 @@ import { createClient } from "@/features/clients/clientThunk";
 
 const AddClientDialog = ({ open, onOpenChange, onCreated }) => {
     const dispatch = useDispatch();
-    const { organizations } = useSelector((state) => state.organization);
-    const activeOrganization = organizations[0];
+    const { activeOrganization } = useSelector((state) => state.organization);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
     const [form, setForm] = useState({

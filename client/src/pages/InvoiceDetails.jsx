@@ -13,10 +13,9 @@ const InvoiceDetails = () => {
     const navigate = useNavigate();
     const { invoiceId } = useParams();
     const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
-    const { organizations, loading: orgLoading } = useSelector(
+    const { activeOrganization, loading: orgLoading } = useSelector(
         (state) => state.organization,
     );
-    const activeOrganization = organizations[0];
     const { selectedInvoice, loading: invoiceLoading } = useSelector(
         (state) => state.invoices,
     );

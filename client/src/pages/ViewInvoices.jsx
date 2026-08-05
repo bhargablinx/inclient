@@ -14,10 +14,9 @@ import { getInvoices } from "@/features/invoices/invoiceThunk";
 
 const ViewInvoices = () => {
     const dispatch = useDispatch();
-    const { organizations, loading: orgLoading } = useSelector(
+    const { activeOrganization, loading: orgLoading } = useSelector(
         (state) => state.organization,
     );
-    const activeOrganization = organizations[0];
     const { invoices, loading: invoiceLoading } = useSelector(
         (state) => state.invoices,
     );

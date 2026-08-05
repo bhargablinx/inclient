@@ -11,7 +11,7 @@ const ProtectedLayout = () => {
     const { isAuthenticated, loading: authLoading } = useSelector(
         (state) => state.auth,
     );
-    const { organizations, loading: orgLoading } = useSelector(
+    const { activeOrganization, loading: orgLoading } = useSelector(
         (state) => state.organization,
     );
 
@@ -27,7 +27,7 @@ const ProtectedLayout = () => {
 
     const onCreateOrgPage = location.pathname === "/organizations/new";
 
-    if (!organizations.length && !onCreateOrgPage) {
+    if (!activeOrganization && !onCreateOrgPage) {
         return <Navigate to="/organizations/new" replace />;
     }
 

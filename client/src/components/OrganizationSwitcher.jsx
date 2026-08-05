@@ -18,16 +18,15 @@ import {
 } from "@/components/ui/sidebar";
 import { ChevronsUpDownIcon, PlusIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { setActiveOrganization } from "@/features/organization/organizationSlice";
 
 export function OrganizationSwitcher({ organizations }) {
     const { isMobile } = useSidebar();
-    const [activeOrg, setActiveOrg] = React.useState(organizations[0]);
-
-    React.useEffect(() => {
-        if (!activeOrg && organizations.length) {
-            setActiveOrg(organizations[0]);
-        }
-    }, [activeOrg, organizations]);
+    const dispatch = useDispatch();
+    const activeOrg = useSelector(
+        (state) => state.organization.activeOrganization,
+    );
 
     if (!activeOrg) {
         return null;
@@ -70,10 +69,12 @@ export function OrganizationSwitcher({ organizations }) {
                         <DropdownMenuLabel className="text-xs text-muted-foreground">
                             Organization
                         </DropdownMenuLabel>
-                        {organizations.map((org, index) => (
+                        {organizations.map((org) => (
                             <DropdownMenuItem
                                 key={org._id}
-                                onClick={() => setActiveOrg(org)}
+                                onClick={() =>
+                                    dispatch(setActiveOrganization(org))
+                                }
                                 className="gap-2 p-2"
                             >
                                 <div className="flex size-6 items-center justify-center rounded-md border">
@@ -107,3 +108,4 @@ export function OrganizationSwitcher({ organizations }) {
         </SidebarMenu>
     );
 }
+

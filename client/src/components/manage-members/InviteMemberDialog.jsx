@@ -23,8 +23,7 @@ import { inviteMemberToOrganization } from "@/features/organization/organization
 
 const InviteMemberDialog = ({ open, onOpenChange, onInvited }) => {
     const dispatch = useDispatch();
-    const { organizations } = useSelector((state) => state.organization);
-    const activeOrganization = organizations[0];
+    const { activeOrganization } = useSelector((state) => state.organization);
     const [email, setEmail] = useState("");
     const [role, setRole] = useState("member");
     const [submitting, setSubmitting] = useState(false);

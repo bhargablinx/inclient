@@ -11,10 +11,9 @@ const PaymentDetails = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { paymentId } = useParams();
-    const { organizations, loading: orgLoading } = useSelector(
+    const { activeOrganization, loading: orgLoading } = useSelector(
         (state) => state.organization,
     );
-    const activeOrganization = organizations[0];
     const { payments, loading: paymentLoading } = useSelector(
         (state) => state.payments,
     );

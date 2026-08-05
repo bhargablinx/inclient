@@ -21,10 +21,9 @@ import {
 const ManageInvoices = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { organizations, loading: orgLoading } = useSelector(
+    const { activeOrganization, loading: orgLoading } = useSelector(
         (state) => state.organization,
     );
-    const activeOrganization = organizations[0];
     const { invoices, loading: invoiceLoading } = useSelector(
         (state) => state.invoices,
     );

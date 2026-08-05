@@ -27,10 +27,9 @@ const CreateInvoice = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { invoiceId } = useParams();
-    const { organizations, loading: orgLoading } = useSelector(
+    const { activeOrganization, loading: orgLoading } = useSelector(
         (state) => state.organization,
     );
-    const activeOrganization = organizations[0];
     const { clients } = useSelector((state) => state.clients);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");

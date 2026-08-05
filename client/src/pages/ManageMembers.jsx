@@ -16,10 +16,9 @@ import {
 
 const ManageMembers = () => {
     const dispatch = useDispatch();
-    const { organizations, loading: orgLoading } = useSelector(
+    const { activeOrganization, loading: orgLoading } = useSelector(
         (state) => state.organization,
     );
-    const activeOrganization = organizations[0];
     const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
     const [members, setMembers] = useState([]);
     const [invitations, setInvitations] = useState([]);

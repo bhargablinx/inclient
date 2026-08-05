@@ -8,10 +8,9 @@ import { getOrganizationInvitations } from "@/features/organization/organization
 
 const Invitations = () => {
     const dispatch = useDispatch();
-    const { organizations, loading: orgLoading } = useSelector(
+    const { activeOrganization, loading: orgLoading } = useSelector(
         (state) => state.organization,
     );
-    const activeOrganization = organizations[0];
     const { invitations } = useSelector((state) => state.organization);
     const [localInvitations, setLocalInvitations] = useState([]);
 
