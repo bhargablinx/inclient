@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -9,10 +9,17 @@ import { loginUser } from "@/features/auth/authThunk";
 export default function Login() {
     const { register, handleSubmit } = useForm();
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { loading, error } = useSelector((state) => state.auth);
 
     const onSubmit = async (formData) => {
-        await dispatch(loginUser(formData));
+        const result = await dispatch(loginUser(formData));
+        if (loginUser.fulfilled.match(result)) {
+            // Honour the ?redirect= param set by InvitationResponse for unauthenticated users.
+            const redirectTo = searchParams.get("redirect") || "/dashboard";
+            navigate(redirectTo, { replace: true });
+        }
     };
 
     if (loading) return <Loading />;

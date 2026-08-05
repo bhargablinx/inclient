@@ -125,11 +125,15 @@ function App() {
                     path: "payments/:paymentId",
                     element: <PaymentDetails />,
                 },
-                {
-                    path: "invitations/:token",
-                    element: <InvitationResponse />,
-                },
+
             ],
+        },
+        // Standalone — accessible regardless of auth state.
+        // Must be outside ProtectedLayout so unauthenticated users
+        // clicking an invitation email link are not redirected to /signup.
+        {
+            path: "/invitations/:token",
+            element: <InvitationResponse />,
         },
         {
             path: "*",
