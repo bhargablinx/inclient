@@ -14,7 +14,10 @@ import { validatePasswordStrength } from "../utils/passwordValidator.js";
 const cookieOption = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    // "none" is required for cross-site (cross-domain) cookie sending in production.
+    // "lax"/"strict" blocks cookies when frontend and backend are on different domains.
+    // "none" MUST be paired with secure:true (enforced above).
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 };
 
 const generateToken = async (userId) => {

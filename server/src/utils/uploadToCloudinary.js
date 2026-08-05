@@ -20,7 +20,9 @@ export const uploadToCloudinary = async (localFilePath) => {
             fs.unlinkSync(localFilePath);
         }
 
-        return response;
+        // Always return secure_url (https) instead of url (http) to prevent
+        // Mixed Content warnings when serving assets from an HTTPS frontend.
+        return { ...response, url: response.secure_url };
     } catch (error) {
         console.log(error);
         fs.unlinkSync(localFilePath);
