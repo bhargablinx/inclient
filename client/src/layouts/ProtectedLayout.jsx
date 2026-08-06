@@ -11,19 +11,21 @@ const ProtectedLayout = () => {
     const { isAuthenticated, loading: authLoading } = useSelector(
         (state) => state.auth,
     );
-    const { activeOrganization, loading: orgLoading } = useSelector(
-        (state) => state.organization,
-    );
+    const {
+        activeOrganization,
+        loading: orgLoading,
+        fetched: orgFetched,
+    } = useSelector((state) => state.organization);
 
     useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated && !orgFetched && !orgLoading) {
             dispatch(getMyOrganizations());
         }
-    }, [dispatch, isAuthenticated]);
+    }, [dispatch, isAuthenticated, orgFetched, orgLoading]);
 
     if (!isAuthenticated) return <Navigate to="/signup" replace />;
 
-    if (authLoading || orgLoading) return <Loading />;
+    if (authLoading || orgLoading || !orgFetched) return <Loading />;
 
     const onCreateOrgPage = location.pathname === "/organizations/new";
 
@@ -41,3 +43,4 @@ const ProtectedLayout = () => {
 };
 
 export default ProtectedLayout;
+

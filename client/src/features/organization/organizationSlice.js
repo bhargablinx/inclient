@@ -7,6 +7,7 @@ import {
     deleteOrganization,
     getOrganizationInvitations,
 } from "./organizationThunk";
+import { logoutUser } from "../auth/authThunk";
 
 const initialState = {
     organization: null,
@@ -14,6 +15,7 @@ const initialState = {
     activeOrganization: null, // The currently selected org in the sidebar switcher
     invitations: [],
     loading: false,
+    fetched: false,
     error: null,
 };
 
@@ -43,6 +45,7 @@ export const organizationSlice = createSlice({
             .addCase(createOrganization.pending, pending)
             .addCase(createOrganization.fulfilled, (state, action) => {
                 state.loading = false;
+                state.fetched = true;
                 state.organization = action.payload;
                 state.organizations = [action.payload, ...state.organizations];
                 // Auto-switch to the newly created org
@@ -58,6 +61,7 @@ export const organizationSlice = createSlice({
             .addCase(getMyOrganizations.pending, pending)
             .addCase(getMyOrganizations.fulfilled, (state, action) => {
                 state.loading = false;
+                state.fetched = true;
                 state.organizations = action.payload ?? [];
                 // Only set the default on first load; don't override an already-picked org
                 if (!state.activeOrganization) {
@@ -65,7 +69,11 @@ export const organizationSlice = createSlice({
                 }
                 state.organization = action.payload?.[0] ?? null;
             })
-            .addCase(getMyOrganizations.rejected, rejected)
+            .addCase(getMyOrganizations.rejected, (state, action) => {
+                state.loading = false;
+                state.fetched = true;
+                state.error = action.payload?.message;
+            })
             .addCase(updateOrganization.pending, pending)
             .addCase(updateOrganization.fulfilled, (state, action) => {
                 state.loading = false;
@@ -85,7 +93,8 @@ export const organizationSlice = createSlice({
             .addCase(deleteOrganization.rejected, rejected)
             .addCase(getOrganizationInvitations.fulfilled, (state, action) => {
                 state.invitations = action.payload ?? [];
-            });
+            })
+            .addCase(logoutUser.fulfilled, () => initialState);
     },
 });
 
@@ -93,4 +102,5 @@ export const { clearOrganizationState, setActiveOrganization } =
     organizationSlice.actions;
 
 export default organizationSlice.reducer;
+
 
