@@ -12,6 +12,11 @@ import errorHandler from "./middlewares/errorHandler.middleware.js";
 import organizationRouter from "./routes/organization.route.js";
 import invitationRouter from "./routes/invitation.route.js";
 import dashboardRouter from "./routes/dashboard.route.js";
+import clientRouter from "./routes/client.route.js";
+import invoiceRouter from "./routes/invoice.route.js";
+import paymentRouter from "./routes/payment.route.js";
+import serviceCatalogRouter from "./routes/serviceCatalog.route.js";
+import membershipRouter from "./routes/membership.route.js";
 
 const app = express();
 
@@ -40,6 +45,11 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/organizations", organizationRouter);
 app.use("/api/v1/invitations", invitationRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
+app.use("/api/v1/organizations/:organizationId/clients", clientRouter);
+app.use("/api/v1/organizations/:organizationId/invoices", invoiceRouter);
+app.use("/api/v1/organizations/:organizationId", paymentRouter);
+app.use("/api/v1/organizations/:organizationId/services", serviceCatalogRouter);
+app.use("/api/v1/organizations/:organizationId", membershipRouter);
 
 app.use(errorHandler);
 
