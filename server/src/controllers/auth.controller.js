@@ -88,14 +88,15 @@ const signup = asyncHandler(async (req, res) => {
             verifyEmailTemplate(verificationUrl)
         );
     } catch (error) {
-        throw new ApiError(500, "Verification email could not be sent");
+        await User.findByIdAndDelete(user._id);
+        throw new ApiError(500, "Verification email could not be sent. Please try signing up again.");
     }
 
     res.status(201).json(
         new ApiResponse(
             201,
-            // verificationToken, // just for testing (remove in production)
-            "Registration Successful (as we don't have funds for email verification)!"
+            null,
+            "Registration successful! Please check your inbox to verify your account before logging in."
         )
     );
 });
