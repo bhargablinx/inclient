@@ -11,6 +11,7 @@ import PDFDocument from "pdfkit";
 import { buildInvoicePdf } from "../utils/generatePdf.js";
 import { sendMail } from "../utils/sendMail.js";
 import { invoiceEmailTemplate } from "../utils/emailTemplate.js";
+import { getNextInvoiceNumber } from "../utils/getNextInvoiceNumber.js";
 
 const createInvoice = asyncHandler(async (req, res) => {
     const { organizationId } = req.params;
@@ -76,15 +77,10 @@ const createInvoice = asyncHandler(async (req, res) => {
         const totalAmount =
             subtotal + Number(taxAmount) - Number(discountAmount);
 
-        // Temporary invoice number generation
-        const invoiceCount = await Invoice.countDocuments({
-            organization: organizationId,
-        });
-
-        const invoiceNumber = `INV-${String(invoiceCount + 1).padStart(
-            4,
-            "0"
-        )}`;
+        const invoiceNumber = await getNextInvoiceNumber(
+            organizationId,
+            session
+        );
 
         const [invoice] = await Invoice.create(
             [
@@ -536,11 +532,10 @@ const duplicateInvoice = asyncHandler(async (req, res) => {
     try {
         session.startTransaction();
 
-        const invoiceCount = await Invoice.countDocuments({
-            organization: organizationId,
-        });
-
-        const invoiceNumber = `INV-${String(invoiceCount + 1).padStart(4, "0")}`;
+        const invoiceNumber = await getNextInvoiceNumber(
+            organizationId,
+            session
+        );
 
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 14);
