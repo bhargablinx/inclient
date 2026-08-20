@@ -58,7 +58,7 @@ const signup = asyncHandler(async (req, res) => {
     if (existingUser)
         throw new ApiError(400, "User already exists with this email!");
 
-    const avatar = "";
+    let avatar = "";
 
     if (req.file) {
         const avatarPath = req.file.path;
