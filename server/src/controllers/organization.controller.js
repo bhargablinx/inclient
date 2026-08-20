@@ -125,35 +125,93 @@ const getMyOrganizations = asyncHandler(async (req, res) => {
         .sort({ createdAt: -1 })
         .lean();
 
-    const organizations = memberships
-        .filter((membership) => membership.organization)
-        .map(async (membership) => {
-            const organizationId = membership.organization._id;
-            const [memberCount, clientCount, invoiceCount] = await Promise.all([
-                Membership.countDocuments({
-                    organization: organizationId,
-                    status: "active",
-                }),
-                Client.countDocuments({
-                    organization: organizationId,
-                    isActive: true,
-                }),
-                Invoice.countDocuments({
-                    organization: organizationId,
-                }),
-            ]);
+    const activeMemberships = memberships.filter(
+        (membership) => membership.organization
+    );
 
-            return {
-                ...membership.organization,
-                role: membership.role,
-                membershipId: membership._id,
-                membersCount: memberCount,
-                clientsCount: clientCount,
-                invoicesCount: invoiceCount,
-            };
-        });
+    if (activeMemberships.length === 0) {
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    [],
+                    "My organizations fetched successfully"
+                )
+            );
+    }
 
-    const resolvedOrganizations = await Promise.all(organizations);
+    const orgIds = activeMemberships.map(
+        (membership) => membership.organization._id
+    );
+
+    const [memberCountsRaw, clientCountsRaw, invoiceCountsRaw] =
+        await Promise.all([
+            Membership.aggregate([
+                {
+                    $match: {
+                        organization: { $in: orgIds },
+                        status: "active",
+                    },
+                },
+                {
+                    $group: {
+                        _id: "$organization",
+                        count: { $sum: 1 },
+                    },
+                },
+            ]),
+            Client.aggregate([
+                {
+                    $match: {
+                        organization: { $in: orgIds },
+                        isActive: true,
+                    },
+                },
+                {
+                    $group: {
+                        _id: "$organization",
+                        count: { $sum: 1 },
+                    },
+                },
+            ]),
+            Invoice.aggregate([
+                {
+                    $match: {
+                        organization: { $in: orgIds },
+                    },
+                },
+                {
+                    $group: {
+                        _id: "$organization",
+                        count: { $sum: 1 },
+                    },
+                },
+            ]),
+        ]);
+
+    const memberMap = new Map(
+        memberCountsRaw.map((item) => [item._id.toString(), item.count])
+    );
+    const clientMap = new Map(
+        clientCountsRaw.map((item) => [item._id.toString(), item.count])
+    );
+    const invoiceMap = new Map(
+        invoiceCountsRaw.map((item) => [item._id.toString(), item.count])
+    );
+
+    const resolvedOrganizations = activeMemberships.map((membership) => {
+        const orgIdStr = membership.organization._id.toString();
+
+        return {
+            ...membership.organization,
+            role: membership.role,
+            membershipId: membership._id,
+            membersCount: memberMap.get(orgIdStr) || 0,
+            clientsCount: clientMap.get(orgIdStr) || 0,
+            invoicesCount: invoiceMap.get(orgIdStr) || 0,
+        };
+    });
 
     return res
         .status(200)
