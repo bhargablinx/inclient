@@ -4,6 +4,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import User from "../models/user.model.js";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import { sendMail } from "../utils/sendMail.js";
 import {
     verifyEmailTemplate,
