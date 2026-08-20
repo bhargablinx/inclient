@@ -298,33 +298,137 @@ const getOrganizationPayments = asyncHandler(async (req, res) => {
     const limit = Math.max(1, Number(req.query.limit) || 10);
     const skip = (page - 1) * limit;
     const { status, search } = req.query;
+    const normalizedSearch = (search || "").trim().toLowerCase();
 
-    const filter = {
-        organization: organizationId,
+    // Base match: scope to organization
+    const baseMatch = {
+        organization: new mongoose.Types.ObjectId(organizationId),
     };
 
-    if (status) {
-        if (status === "completed") {
-            filter.amount = { $gt: 0 };
-        }
+    if (status === "completed") {
+        baseMatch.amount = { $gt: 0 };
     }
 
-    const [payments, totalPayments, amountSummary] = await Promise.all([
-        Payment.find(filter)
-            .populate({
-                path: "invoice",
-                select: "invoiceNumber client totalAmount amountPaid balanceDue status dueDate issueDate",
-                populate: {
-                    path: "client",
-                    select: "name companyName email",
+    // Build aggregation pipeline that applies search BEFORE pagination
+    const pipeline = [
+        { $match: baseMatch },
+        // Join invoice data to enable searching on invoiceNumber and client name
+        {
+            $lookup: {
+                from: "invoices",
+                localField: "invoice",
+                foreignField: "_id",
+                as: "invoice",
+            },
+        },
+        { $unwind: { path: "$invoice", preserveNullAndEmpty: true } },
+        // Join client from invoice
+        {
+            $lookup: {
+                from: "clients",
+                localField: "invoice.client",
+                foreignField: "_id",
+                as: "invoice.client",
+            },
+        },
+        {
+            $unwind: {
+                path: "$invoice.client",
+                preserveNullAndEmpty: true,
+            },
+        },
+        // Join receivedBy user
+        {
+            $lookup: {
+                from: "users",
+                localField: "receivedBy",
+                foreignField: "_id",
+                as: "receivedBy",
+            },
+        },
+        {
+            $unwind: {
+                path: "$receivedBy",
+                preserveNullAndEmpty: true,
+            },
+        },
+    ];
+
+    // Apply search filter BEFORE skip/limit
+    if (normalizedSearch) {
+        pipeline.push({
+            $match: {
+                $or: [
+                    {
+                        "invoice.invoiceNumber": {
+                            $regex: normalizedSearch,
+                            $options: "i",
+                        },
+                    },
+                    {
+                        "invoice.client.companyName": {
+                            $regex: normalizedSearch,
+                            $options: "i",
+                        },
+                    },
+                    {
+                        "invoice.client.name": {
+                            $regex: normalizedSearch,
+                            $options: "i",
+                        },
+                    },
+                    {
+                        referenceNumber: {
+                            $regex: normalizedSearch,
+                            $options: "i",
+                        },
+                    },
+                ],
+            },
+        });
+    }
+
+    // Run paginated data + total count in parallel using $facet
+    pipeline.push({
+        $facet: {
+            data: [
+                { $sort: { paymentDate: -1, createdAt: -1 } },
+                { $skip: skip },
+                { $limit: limit },
+                // Trim receivedBy and invoice fields to match original shape
+                {
+                    $project: {
+                        amount: 1,
+                        paymentDate: 1,
+                        paymentMethod: 1,
+                        referenceNumber: 1,
+                        createdAt: 1,
+                        updatedAt: 1,
+                        organization: 1,
+                        "receivedBy._id": 1,
+                        "receivedBy.name": 1,
+                        "receivedBy.email": 1,
+                        "invoice._id": 1,
+                        "invoice.invoiceNumber": 1,
+                        "invoice.totalAmount": 1,
+                        "invoice.amountPaid": 1,
+                        "invoice.balanceDue": 1,
+                        "invoice.status": 1,
+                        "invoice.dueDate": 1,
+                        "invoice.issueDate": 1,
+                        "invoice.client._id": 1,
+                        "invoice.client.name": 1,
+                        "invoice.client.companyName": 1,
+                        "invoice.client.email": 1,
+                    },
                 },
-            })
-            .populate("receivedBy", "name email")
-            .sort({ paymentDate: -1, createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean(),
-        Payment.countDocuments(filter),
+            ],
+            totalCount: [{ $count: "count" }],
+        },
+    });
+
+    const [result, amountSummary] = await Promise.all([
+        Payment.aggregate(pipeline),
         Payment.aggregate([
             { $match: { organization: new mongoose.Types.ObjectId(organizationId) } },
             {
@@ -337,28 +441,20 @@ const getOrganizationPayments = asyncHandler(async (req, res) => {
         ]),
     ]);
 
-    const normalizedSearch = (search || "").trim().toLowerCase();
-    const filteredPayments = normalizedSearch
-        ? payments.filter((payment) => {
-              const invoiceNumber = payment.invoice?.invoiceNumber || "";
-              const clientName =
-                  payment.invoice?.client?.companyName ||
-                  payment.invoice?.client?.name ||
-                  "";
-              const referenceNumber = payment.referenceNumber || "";
+    const payments = result[0]?.data || [];
+    const totalPayments = result[0]?.totalCount?.[0]?.count || 0;
 
-              return (
-                  invoiceNumber.toLowerCase().includes(normalizedSearch) ||
-                  clientName.toLowerCase().includes(normalizedSearch) ||
-                  referenceNumber.toLowerCase().includes(normalizedSearch)
-              );
-          })
-        : payments;
-
-    const completed = filteredPayments.filter((payment) =>
-        ["cash", "bank_transfer", "upi", "credit_card", "debit_card", "cheque", "other"].includes(
-            payment.paymentMethod,
-        ),
+    const validPaymentMethods = [
+        "cash",
+        "bank_transfer",
+        "upi",
+        "credit_card",
+        "debit_card",
+        "cheque",
+        "other",
+    ];
+    const completed = payments.filter((p) =>
+        validPaymentMethods.includes(p.paymentMethod)
     ).length;
 
     const summary = amountSummary[0] || {};
@@ -367,7 +463,7 @@ const getOrganizationPayments = asyncHandler(async (req, res) => {
         new ApiResponse(
             200,
             {
-                payments: filteredPayments,
+                payments,
                 pagination: {
                     page,
                     limit,
