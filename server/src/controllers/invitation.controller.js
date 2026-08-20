@@ -26,29 +26,30 @@ const inviteUser = asyncHandler(async (req, res) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
+    if (normalizedEmail === req.user.email.toLowerCase()) {
+        throw new ApiError(400, "You cannot invite yourself");
+    }
+
     const userToInvite = await User.findOne({
         email: normalizedEmail,
     });
 
-    if (!userToInvite) throw new ApiError(404, "User doesn't exists");
+    if (userToInvite) {
+        const existingMembership = await Membership.findOne({
+            user: userToInvite._id,
+            organization: organizationId,
+        });
 
-    if (userToInvite._id.equals(req.user._id))
-        throw new ApiError(400, "You cannot invite yourself");
-
-    const existingMembership = await Membership.findOne({
-        user: userToInvite._id,
-        organization: organizationId,
-    });
-
-    if (existingMembership) {
-        throw new ApiError(
-            400,
-            "User is already a member of this organization"
-        );
+        if (existingMembership) {
+            throw new ApiError(
+                400,
+                "User is already a member of this organization"
+            );
+        }
     }
 
     const existingInvitation = await Invitation.findOne({
-        user: userToInvite._id,
+        email: normalizedEmail,
         organization: organizationId,
         status: "pending",
     });
@@ -58,10 +59,10 @@ const inviteUser = asyncHandler(async (req, res) => {
     }
 
     const invitation = await Invitation.create({
-        user: userToInvite._id,
+        user: userToInvite ? userToInvite._id : null,
         organization: organizationId,
         role,
-        email,
+        email: normalizedEmail,
         invitedBy: req.user._id,
     });
 
@@ -72,7 +73,7 @@ const inviteUser = asyncHandler(async (req, res) => {
     const invitationUrl = `${process.env.CLIENT_URL}/invitations/${invitationToken}`;
     try {
         await sendMail(
-            userToInvite.email,
+            normalizedEmail,
             `Invitation to join ${organization.name}`,
             invitationTemplate(
                 organization.name,
@@ -108,8 +109,12 @@ const acceptInvitation = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid or expired invitation");
     }
 
-    // Ensure invitation belongs to logged-in user
-    if (!invitation.user.equals(req.user._id)) {
+    // Ensure invitation matches logged-in user
+    const isUserMatch = invitation.user
+        ? invitation.user.equals(req.user._id)
+        : invitation.email.toLowerCase() === req.user.email.toLowerCase();
+
+    if (!isUserMatch) {
         throw new ApiError(403, "This invitation is not for you");
     }
 
@@ -127,13 +132,14 @@ const acceptInvitation = asyncHandler(async (req, res) => {
     }
 
     const membership = await Membership.create({
-        user: invitation.user,
+        user: req.user._id,
         organization: invitation.organization,
         role: invitation.role,
     });
 
     invitation.status = "accepted";
-    invitation.token = undefined;
+    invitation.user = req.user._id;
+    invitation.invitationToken = undefined;
     invitation.expiresAt = undefined;
 
     await invitation.save({
@@ -162,8 +168,12 @@ const rejectInvitation = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid or expired invitation");
     }
 
-    // Ensure invitation belongs to logged-in user
-    if (!invitation.user.equals(req.user._id)) {
+    // Ensure invitation matches logged-in user
+    const isUserMatch = invitation.user
+        ? invitation.user.equals(req.user._id)
+        : invitation.email.toLowerCase() === req.user.email.toLowerCase();
+
+    if (!isUserMatch) {
         throw new ApiError(403, "This invitation is not for you");
     }
 
