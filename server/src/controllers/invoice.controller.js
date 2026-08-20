@@ -261,8 +261,6 @@ const updateInvoice = asyncHandler(async (req, res) => {
         session.startTransaction();
 
         let subtotal = invoice.subtotal;
-        let totalAmount = invoice.totalAmount;
-        let balanceDue = invoice.balanceDue;
 
         // Update invoice items if provided
         if (items && Array.isArray(items)) {
@@ -302,13 +300,6 @@ const updateInvoice = asyncHandler(async (req, res) => {
             });
 
             subtotal = calculatedSubtotal;
-
-            totalAmount =
-                subtotal +
-                Number(taxAmount ?? invoice.taxAmount) -
-                Number(discountAmount ?? invoice.discountAmount);
-
-            balanceDue = totalAmount - invoice.amountPaid;
         }
 
         if (dueDate) {
@@ -320,23 +311,30 @@ const updateInvoice = asyncHandler(async (req, res) => {
         }
 
         if (taxAmount !== undefined) {
-            invoice.taxAmount = taxAmount;
+            invoice.taxAmount = Number(taxAmount);
         }
 
         if (discountAmount !== undefined) {
-            invoice.discountAmount = discountAmount;
+            invoice.discountAmount = Number(discountAmount);
         }
 
-        invoice.subtotal = subtotal;
+        invoice.subtotal = Number(subtotal);
 
         invoice.totalAmount =
-            items !== undefined
-                ? totalAmount
-                : invoice.subtotal +
-                  (taxAmount ?? invoice.taxAmount) -
-                  (discountAmount ?? invoice.discountAmount);
+            Number(invoice.subtotal) +
+            Number(invoice.taxAmount || 0) -
+            Number(invoice.discountAmount || 0);
 
-        invoice.balanceDue = invoice.totalAmount - invoice.amountPaid;
+        invoice.balanceDue =
+            invoice.totalAmount - Number(invoice.amountPaid || 0);
+
+        if (invoice.status !== "cancelled") {
+            if (invoice.balanceDue <= 0 && invoice.amountPaid > 0) {
+                invoice.status = "paid";
+            } else if (invoice.amountPaid > 0 && invoice.balanceDue > 0) {
+                invoice.status = "partially_paid";
+            }
+        }
 
         await invoice.save({ session });
 
